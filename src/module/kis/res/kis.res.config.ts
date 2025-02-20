@@ -1,12 +1,12 @@
 import { ResEnum } from '../../../type/enum/res';
-import { ResDto } from '../../../common';
+import { ResConfig } from '../../../config';
 
-export class KisRes extends ResDto {
+export class KisResConfig extends ResConfig {
   constructor(result: ResEnum, message?: string, data?: unknown) {
     super(result, message, data);
   }
 
   static Success<T>(params: { message?: string; data?: T }) {
-    return ResDto.Success<T>(params);
+    return ResConfig.Success<T>(params);
   }
 }

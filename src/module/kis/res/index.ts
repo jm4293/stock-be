@@ -1,1 +1,1 @@
-export * from './kis.res';
+export * from './kis.res.config';

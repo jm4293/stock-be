@@ -1,6 +1,6 @@
-import { ResEnum } from '../../type/enum/res';
+import { ResEnum } from '../type/enum/res';
 
-export class ResDto<T = unknown> {
+export class ResConfig<T = unknown> {
   constructor(
     private readonly result: ResEnum,
     private readonly message?: string,
@@ -10,12 +10,12 @@ export class ResDto<T = unknown> {
   static Success<T>(params: { message?: string; data?: T }) {
     const { message, data } = params;
 
-    return new ResDto<T>(ResEnum.SUCCESS, message, data);
+    return new ResConfig<T>(ResEnum.SUCCESS, message, data);
   }
 
   static Fail(params: { message?: string }) {
     const { message } = params;
 
-    return new ResDto<null>(ResEnum.FAIL, message, null);
+    return new ResConfig<null>(ResEnum.FAIL, message, null);
   }
 }

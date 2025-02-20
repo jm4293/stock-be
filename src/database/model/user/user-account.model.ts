@@ -7,7 +7,7 @@ export class UserAccount {
   userAccountSeq: number;
 
   @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userSeq' }) // 외래 키 이름을 명시적으로 설정
+  @JoinColumn({ name: 'userSeq' })
   user: User;
 
   @CreateDateColumn({ type: 'timestamp' })
