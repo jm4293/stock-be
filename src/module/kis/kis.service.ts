@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IResOauthToken } from '../../type/interface/kis';
-import { ResDto } from '../../common/res/res-dto';
 import { KisRes } from './res';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
@@ -15,10 +14,8 @@ export class KisService {
     private readonly httpService: HttpService,
   ) {}
 
-  async postOuathToken(): Promise<ResDto<IResOauthToken>> {
+  async postOuathToken() {
     const ret = await this._getOuathToken();
-
-    console.log('postOuathToken', ret);
 
     return KisRes.Success<IResOauthToken>({
       data: ret,
@@ -27,8 +24,6 @@ export class KisService {
 
   async deleteOuathToken() {
     const ret = await this._deleteOuathToken();
-
-    console.log('deleteOuathToken', ret);
 
     return KisRes.Success({
       data: ret,
@@ -58,8 +53,6 @@ export class KisService {
   }
 
   private async _deleteOuathToken() {
-    console.log('this.oauthToken ', this.oauthToken);
-
     const ret = this.httpService
       .post(`${this.configService.get('KIS_APP_URL')}/oauth2/revokeP`, {
         token: this.oauthToken,

@@ -1,5 +1,5 @@
-import { ResDto } from '../../../common/res/res-dto';
 import { ResEnum } from '../../../type/enum/res';
+import { ResDto } from '../../../common';
 
 export class KisRes extends ResDto {
   constructor(result: ResEnum, message?: string, data?: unknown) {
