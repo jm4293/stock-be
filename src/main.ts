@@ -18,8 +18,8 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  await app.listen(process.env.PORT as string, () => {
-    console.log(`Server is running on ${process.env.PORT}`);
+  await app.listen(process.env.SERVER_PORT as string, () => {
+    console.log(`Server is running on ${process.env.SERVER_PORT}`);
   });
 }
 bootstrap();
