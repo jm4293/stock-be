@@ -1,5 +1,5 @@
-import { ResEnum } from '../../../type/enum/res';
-import { ResConfig } from '../../../config';
+import { ResEnum } from '../../../enum/res';
+import { ResConfig } from '../../../../config';
 
 export class KisResConfig extends ResConfig {
   constructor(result: ResEnum, message?: string, data?: unknown) {
