@@ -1,7 +1,7 @@
-export * from './config.module';
+export * from './config-module.config';
 
 export * from './res.config';
 
-export * from './typeorm.module';
+export * from './typeorm-module.config';
 
-export * from './validationPipe.module';
+export * from './validation-pipe.config';
