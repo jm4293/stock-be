@@ -7,10 +7,10 @@ export class User {
   @PrimaryGeneratedColumn()
   userSeq: number;
 
-  @Column({ type: 'enum', enum: UserStatusEnum })
+  @Column({ type: 'enum', enum: UserStatusEnum, default: UserStatusEnum.ACTIVE })
   status: UserStatusEnum;
 
-  @Column({ type: 'enum', enum: UserTypeEnum })
+  @Column({ type: 'enum', enum: UserTypeEnum, default: UserTypeEnum.USER })
   type: UserTypeEnum;
 
   @Column({ type: 'varchar', length: 255 })

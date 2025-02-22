@@ -19,7 +19,7 @@ export class UserAccount {
   @JoinColumn({ name: 'userSeq' })
   user: User;
 
-  @Column({ type: 'enum', enum: UserAccountStatusEnum })
+  @Column({ type: 'enum', enum: UserAccountStatusEnum, default: UserAccountStatusEnum.ACTIVE })
   status: UserAccountStatusEnum;
 
   @Column({ type: 'enum', enum: UserAccountTypeEnum })
@@ -28,7 +28,7 @@ export class UserAccount {
   @Column({ type: 'varchar', length: 255 })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   password: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

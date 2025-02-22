@@ -1,13 +1,23 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { UserVisitTypeEnum } from '../../../type/enum';
+import { User } from './user.entity';
 
 @Entity()
 export class UserVisit {
   @PrimaryGeneratedColumn()
   userVisitSeq: number;
 
-  @Column({ type: 'int' })
-  userSeq: number;
+  @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userSeq' })
+  user: User;
 
   @Column({ type: 'enum', enum: UserVisitTypeEnum })
   type: UserVisitTypeEnum;

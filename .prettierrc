@@ -4,5 +4,7 @@
   "jsxBracketSameLine": true,
   "trailingComma": "all",
   "tabWidth": 2,
-  "printWidth": 120
+  "printWidth": 120,
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
 }

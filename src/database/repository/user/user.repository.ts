@@ -11,7 +11,11 @@ export class UserRepository {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createUser(dto: CreateUserDto) {
-    await this.userRepository.save(dto);
+  async createUser(dto: Pick<CreateUserDto, 'nickname' | 'name' | 'age' | 'policy' | 'birthdate'>) {
+    const { nickname, name, age, policy, birthdate } = dto;
+
+    const user = this.userRepository.create({ nickname, name, age, policy, birthdate });
+
+    return await this.userRepository.save(user);
   }
 }
