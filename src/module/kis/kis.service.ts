@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
-import { IPostOuathTokenRes, KisResConfig } from '../../type/interface/res';
+import { IPostOuathTokenRes, KisResConfig } from '../../type/interface';
 
 @Injectable()
 export class KisService {

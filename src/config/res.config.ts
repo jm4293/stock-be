@@ -1,4 +1,4 @@
-import { ResEnum } from '../type/enum/res';
+import { ResEnum } from '../type/enum';
 
 export class ResConfig<T = unknown> {
   constructor(

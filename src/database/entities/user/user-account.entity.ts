@@ -8,6 +8,7 @@ import {
   Column,
 } from 'typeorm';
 import { User } from './user.entity';
+import { UserAccountStatusEnum, UserAccountTypeEnum } from '../../../type/enum';
 
 @Entity()
 export class UserAccount {
@@ -18,8 +19,20 @@ export class UserAccount {
   @JoinColumn({ name: 'userSeq' })
   user: User;
 
+  @Column({ type: 'enum', enum: UserAccountStatusEnum })
+  status: UserAccountStatusEnum;
+
+  @Column({ type: 'enum', enum: UserAccountTypeEnum })
+  type: UserAccountTypeEnum;
+
   @Column({ type: 'varchar', length: 255 })
   email: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  password: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  refreshToken: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
