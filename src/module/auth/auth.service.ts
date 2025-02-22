@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository } from '../../database/repository';
-import { CreateUserDto } from '../../type/interface';
+import { PostAuthLoginEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
+import { UserAccountTypeEnum } from '../../type/enum';
 
 @Injectable()
 export class AuthService {
@@ -13,21 +14,20 @@ export class AuthService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async register(dto: CreateUserDto) {
+  async registerEmail(dto: PostCreateUserEmailDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const { nickname, name, age, policy, birthdate, userAccountType, email, password, refreshToken } = dto;
-
     try {
+      const { nickname, name, age, policy, birthdate, email, password } = dto;
+
       let user: User;
-      let hashedPassword: string | undefined = undefined;
 
-      const isUserExist = await this.userAccountRepository.findUserAccountByEmail(email);
+      const isUserAccountExist = await this.userAccountRepository.findUserAccountByEmail(email);
 
-      if (isUserExist) {
-        user = isUserExist.user;
+      if (isUserAccountExist) {
+        user = isUserAccountExist.user;
       } else {
         user = await this.userRepository.createUser({
           nickname,
@@ -38,15 +38,12 @@ export class AuthService {
         });
       }
 
-      if (password) {
-        hashedPassword = await BcryptHandler.hashPassword(password);
-      }
+      const hashedPassword = await BcryptHandler.hashPassword(password);
 
       const userAccount = await this.userAccountRepository.createUserAccount({
-        userAccountType,
+        type: UserAccountTypeEnum.EMAIL,
         email,
         password: hashedPassword,
-        refreshToken,
         user,
       });
 
@@ -54,6 +51,8 @@ export class AuthService {
       await queryRunner.manager.save(userAccount);
 
       await queryRunner.commitTransaction();
+
+      return user;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -61,4 +60,10 @@ export class AuthService {
       await queryRunner.release();
     }
   }
+
+  async registerOauth() {}
+
+  async loginEmail(dto: PostAuthLoginEmailDto) {}
+
+  async loginOauth() {}
 }

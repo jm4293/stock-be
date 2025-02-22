@@ -4,7 +4,7 @@ import { UserAccountTypeEnum } from '../../../enum';
 import { IsBoolean, IsDate, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreateUserDto implements BaseUserDto, BaseUserAccountDto {
+export class PostCreateUserEmailDto implements BaseUserDto, BaseUserAccountDto {
   // BaseUserDto 속성
   @IsString()
   @IsNotEmpty()
@@ -29,17 +29,9 @@ export class CreateUserDto implements BaseUserDto, BaseUserAccountDto {
   // BaseUserAccountDto 속성
   @IsString()
   @IsNotEmpty()
-  userAccountType: UserAccountTypeEnum;
-
-  @IsString()
-  @IsNotEmpty()
   email: string;
 
   @IsString()
-  @IsOptional()
-  password?: string;
-
-  @IsString()
-  @IsOptional()
-  refreshToken?: string;
+  @IsNotEmpty()
+  password: string;
 }

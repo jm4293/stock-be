@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User, UserAccount } from '../../entities';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from '../../../type/interface';
+import { PostCreateUserEmailDto } from '../../../type/interface';
+import { UserAccountTypeEnum } from '../../../type/enum';
 
 @Injectable()
 export class UserAccountRepository {
@@ -12,11 +13,11 @@ export class UserAccountRepository {
   ) {}
 
   async createUserAccount(
-    dto: Pick<CreateUserDto, 'userAccountType' | 'email' | 'password' | 'refreshToken'> & { user: User },
+    dto: Pick<PostCreateUserEmailDto, 'email' | 'password'> & { user: User; type: UserAccountTypeEnum },
   ) {
-    const { user, userAccountType: type, email, password, refreshToken } = dto;
+    const { user, type, email, password } = dto;
 
-    const userAccount = this.userAccountRepository.create({ user, type, email, password, refreshToken });
+    const userAccount = this.userAccountRepository.create({ user, type, email, password });
 
     return await this.userAccountRepository.save(userAccount);
   }
