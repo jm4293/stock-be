@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { AuthRes, IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -35,8 +36,12 @@ export class AuthController {
   }
 
   @Post('login-email')
-  login(@Body() dto: PostAuthLoginEmailDto) {
-    return this.authService.loginEmail(dto);
+  async login(@Body() dto: PostAuthLoginEmailDto, @Res() res: Response) {
+    try {
+      return await this.authService.loginEmail(dto, res);
+    } catch (e) {
+      return AuthRes.Fail({ message: e.message });
+    }
   }
 
   @Post('login-oauth')

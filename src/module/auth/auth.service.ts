@@ -6,12 +6,18 @@ import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
 import { UserAccountTypeEnum } from '../../type/enum';
 import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
+import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly userAccountRepository: UserAccountRepository,
+
+    private readonly jwtService: JwtService,
+
     private readonly dataSource: DataSource,
   ) {}
 
@@ -66,7 +72,47 @@ export class AuthService {
     return { isExist: !!isUserAccountExist, email };
   }
 
-  async loginEmail(dto: PostAuthLoginEmailDto) {}
+  async loginEmail(dto: PostAuthLoginEmailDto, res: Response) {
+    const { email, password } = dto;
+
+    const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
+
+    if (!userAccount) {
+      throw new Error('일치하는 사용자가 없습니다.');
+    }
+
+    const isMatch = await BcryptHandler.comparePassword(password, userAccount.password);
+
+    if (!isMatch) {
+      throw new Error('비밀번호가 일치하지 않습니다.');
+    }
+
+    const accessToken = this._generateJwtToken({
+      userSeq: userAccount.user.userSeq,
+      email: userAccount.email,
+      expiresIn: ACCESS_TOKEN_TIME,
+    });
+
+    const refreshToken = this._generateJwtToken({
+      userSeq: userAccount.user.userSeq,
+      email: userAccount.email,
+      expiresIn: REFRESH_TOKEN_TIME,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: REFRESH_TOKEN_COOKIE_TIME,
+    });
+
+    return res.status(200).send({ data: { email: userAccount.email, accessToken } });
+  }
 
   async loginOauth() {}
+
+  private _generateJwtToken(params: { userSeq: number; email: string; expiresIn: number }) {
+    const { userSeq, email, expiresIn } = params;
+
+    return this.jwtService.sign({ userSeq, email }, { expiresIn });
+  }
 }

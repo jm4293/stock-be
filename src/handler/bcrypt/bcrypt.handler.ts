@@ -5,4 +5,8 @@ export const BcryptHandler = {
     const hashSalt = await bcrypt.genSalt();
     return await bcrypt.hash(password, hashSalt);
   },
+
+  comparePassword: async (password: string, hashPassword: string) => {
+    return await bcrypt.compare(password, hashPassword);
+  },
 };
