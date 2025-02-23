@@ -1,3 +1,3 @@
 import { BadRequestException, ValidationPipe, ValidationError } from '@nestjs/common';
 
-export const ValidationPipeConfig = new ValidationPipe({});
+export const validationPipeConfig = new ValidationPipe({});

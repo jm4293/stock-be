@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
-import { ValidationPipeConfig } from './config';
+import { validationPipeConfig } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +14,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalPipes(ValidationPipeConfig);
+  app.useGlobalPipes(validationPipeConfig);
 
   app.use(cookieParser());
 
