@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository } from '../../database/repository';
-import { PostAuthLoginEmailDto, PostCreateUserEmailDto } from '../../type/interface';
+import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
 import { UserAccountTypeEnum } from '../../type/enum';
+import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
 
 @Injectable()
 export class AuthService {
@@ -14,13 +15,13 @@ export class AuthService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerEmail(dto: PostCreateUserEmailDto) {
+  async registerEmail(dto: PostCreateUserEmailDto): Promise<IPostCreateUserEmailRes> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const { nickname, name, age, policy, birthdate, email, password } = dto;
+      const { nickname, name, policy, birthdate, email, password } = dto;
 
       let user: User;
 
@@ -29,13 +30,7 @@ export class AuthService {
       if (isUserAccountExist) {
         user = isUserAccountExist.user;
       } else {
-        user = await this.userRepository.createUser({
-          nickname,
-          name,
-          age,
-          policy,
-          birthdate,
-        });
+        user = await this.userRepository.createUser({ nickname, name, policy, birthdate });
       }
 
       const hashedPassword = await BcryptHandler.hashPassword(password);
@@ -52,7 +47,7 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      return user;
+      return { email: userAccount.email };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -62,6 +57,14 @@ export class AuthService {
   }
 
   async registerOauth() {}
+
+  async checkEmail(dto: PostCheckEmailDto): Promise<IPostCheckEmailRes> {
+    const { email } = dto;
+
+    const isUserAccountExist = await this.userAccountRepository.findUserAccountByEmail(email);
+
+    return { isExist: !!isUserAccountExist, email };
+  }
 
   async loginEmail(dto: PostAuthLoginEmailDto) {}
 

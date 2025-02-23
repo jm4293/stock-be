@@ -19,13 +19,10 @@ export class User {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'int', nullable: true })
-  age: number;
-
   @Column({ type: 'boolean' })
   policy: boolean;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'varchar', length: 10, nullable: true })
   birthdate: Date;
 
   @CreateDateColumn({ type: 'timestamp' })

@@ -11,10 +11,10 @@ export class UserRepository {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createUser(dto: Pick<PostCreateUserEmailDto, 'nickname' | 'name' | 'age' | 'policy' | 'birthdate'>) {
-    const { nickname, name, age, policy, birthdate } = dto;
+  async createUser(dto: Pick<PostCreateUserEmailDto, 'nickname' | 'name' | 'policy' | 'birthdate'>) {
+    const { nickname, name, policy, birthdate } = dto;
 
-    const user = this.userRepository.create({ nickname, name, age, policy, birthdate });
+    const user = this.userRepository.create({ nickname, name, policy, birthdate });
 
     return await this.userRepository.save(user);
   }
