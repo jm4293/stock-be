@@ -6,7 +6,7 @@ import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
 import { UserAccountTypeEnum } from '../../type/enum';
 import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -111,6 +111,30 @@ export class AuthService {
   }
 
   async loginOauth() {}
+
+  async refreshToken(params: { req: Request; res: Response }) {
+    const { req, res } = params;
+
+    const refreshToken = req.cookies['refreshToken'];
+
+    if (!refreshToken) {
+      throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 400);
+    }
+
+    try {
+      const { userSeq, email } = this.jwtService.verify(refreshToken, this.configService.get('JWT_SECRET_KEY'));
+
+      const accessToken = await this._generateJwtToken({
+        userSeq,
+        email,
+        expiresIn: ACCESS_TOKEN_TIME,
+      });
+
+      return res.status(200).send({ data: { email, accessToken } });
+    } catch (e) {
+      throw new HttpException('리프레시 토큰이 유효하지 않습니다.', 400);
+    }
+  }
 
   private async _generateJwtToken(params: { userSeq: number; email: string; expiresIn: number }) {
     const { userSeq, email, expiresIn } = params;

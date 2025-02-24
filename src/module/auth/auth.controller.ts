@@ -1,7 +1,7 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Public } from '../../decorator';
 
 @Controller('auth')
@@ -36,5 +36,11 @@ export class AuthController {
   @Post('login-oauth')
   loginOauth() {
     return this.authService.loginOauth();
+  }
+
+  @Public()
+  @Post('refresh-token')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    return await this.authService.refreshToken({ req, res });
   }
 }
