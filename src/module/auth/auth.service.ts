@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository } from '../../database/repository';
 import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { DataSource } from 'typeorm';
@@ -9,6 +9,7 @@ import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interfac
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     private readonly userAccountRepository: UserAccountRepository,
 
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -78,22 +80,22 @@ export class AuthService {
     const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
     if (!userAccount) {
-      throw new Error('일치하는 사용자가 없습니다.');
+      throw new HttpException('일치하는 사용자가 없습니다.', 400);
     }
 
     const isMatch = await BcryptHandler.comparePassword(password, userAccount.password);
 
     if (!isMatch) {
-      throw new Error('비밀번호가 일치하지 않습니다.');
+      throw new HttpException('비밀번호가 일치하지 않습니다.', 400);
     }
 
-    const accessToken = this._generateJwtToken({
+    const accessToken = await this._generateJwtToken({
       userSeq: userAccount.user.userSeq,
       email: userAccount.email,
       expiresIn: ACCESS_TOKEN_TIME,
     });
 
-    const refreshToken = this._generateJwtToken({
+    const refreshToken = await this._generateJwtToken({
       userSeq: userAccount.user.userSeq,
       email: userAccount.email,
       expiresIn: REFRESH_TOKEN_TIME,
@@ -110,9 +112,12 @@ export class AuthService {
 
   async loginOauth() {}
 
-  private _generateJwtToken(params: { userSeq: number; email: string; expiresIn: number }) {
+  private async _generateJwtToken(params: { userSeq: number; email: string; expiresIn: number }) {
     const { userSeq, email, expiresIn } = params;
 
-    return this.jwtService.sign({ userSeq, email }, { expiresIn });
+    return await this.jwtService.signAsync(
+      { userSeq, email },
+      { expiresIn, secret: this.configService.get('JWT_SECRET_KEY') },
+    );
   }
 }

@@ -11,6 +11,6 @@ import { jwtModuleConfig } from '../../config';
   imports: [TypeOrmModule.forFeature([User, UserAccount]), JwtModule.registerAsync(jwtModuleConfig)],
   controllers: [AuthController],
   providers: [AuthService, UserRepository, UserAccountRepository],
-  exports: [],
+  exports: [JwtModule],
 })
 export class AuthModule {}
