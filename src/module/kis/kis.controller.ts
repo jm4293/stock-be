@@ -5,12 +5,12 @@ import { KisService } from './kis.service';
 export class KisController {
   constructor(private readonly kisService: KisService) {}
 
-  @Get('oauth/token')
+  @Get('oauth-token')
   postOuathToken() {
     return this.kisService.postOuathToken();
   }
 
-  @Delete('oauth/revoke')
+  @Delete('oauth-revoke')
   deleteOuathToken() {
     return this.kisService.deleteOuathToken();
   }
