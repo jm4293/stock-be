@@ -18,4 +18,8 @@ export class UserRepository {
 
     return await this.userRepository.save(user);
   }
+
+  async findUserByUserSeq(userSeq: number) {
+    return await this.userRepository.findOne({ where: { userSeq } });
+  }
 }

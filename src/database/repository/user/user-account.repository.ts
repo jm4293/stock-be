@@ -35,4 +35,8 @@ export class UserAccountRepository {
 
     return await this.userAccountRepository.update(userAccountSeq, { refreshToken });
   }
+
+  async clearUserAccountRefreshToken(userAccountSeq: number) {
+    return await this.userAccountRepository.update(userAccountSeq, { refreshToken: null });
+  }
 }

@@ -30,9 +30,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerEmail(params: { dto: PostCreateUserEmailDto; req: Request }): Promise<IPostCreateUserEmailRes> {
-    const { dto, req } = params;
-
+  async registerEmail(dto: PostCreateUserEmailDto): Promise<IPostCreateUserEmailRes> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -61,16 +59,6 @@ export class AuthService {
 
       await queryRunner.manager.save(user);
       await queryRunner.manager.save(userAccount);
-
-      const { ip, userAgent, referer } = this._getUserVisitInfo(req);
-
-      await this.userVisitRepository.createUserVisit({
-        type: UserVisitTypeEnum.SIGN_UP_EMAIL,
-        ip,
-        userAgent,
-        referer,
-        user: userAccount.user,
-      });
 
       await queryRunner.commitTransaction();
 
@@ -103,7 +91,7 @@ export class AuthService {
       throw new HttpException('일치하는 사용자가 없습니다.', 400);
     }
 
-    const isMatch = await BcryptHandler.comparePassword(password, userAccount.password);
+    const isMatch = await BcryptHandler.comparePassword(password, userAccount.password as string);
 
     if (!isMatch) {
       throw new HttpException('비밀번호가 일치하지 않습니다.', 400);
@@ -127,25 +115,29 @@ export class AuthService {
       maxAge: REFRESH_TOKEN_COOKIE_TIME,
     });
 
-    const { ip, userAgent, referer } = this._getUserVisitInfo(req);
-
-    await this.userVisitRepository.createUserVisit({
-      type: UserVisitTypeEnum.SIGN_IN_EMAIL,
-      ip,
-      userAgent,
-      referer,
-      user: userAccount.user,
-    });
-
     await this.userAccountRepository.updateUserAccountRefreshToken({
       userAccountSeq: userAccount.userAccountSeq,
       refreshToken,
     });
 
+    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_IN_EMAIL, user: userAccount.user });
+
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
 
   async loginOauth() {}
+
+  async logoutEmail(params: { req: Request; res: Response }) {
+    const { req, res } = params;
+
+    res.clearCookie('refreshToken');
+
+    await this.userAccountRepository.clearUserAccountRefreshToken(req.user.userSeq);
+
+    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL });
+
+    return res.status(200).send({ data: {} });
+  }
 
   async refreshToken(params: { req: Request; res: Response }) {
     const { req, res } = params;
@@ -189,10 +181,25 @@ export class AuthService {
     );
   }
 
-  private _getUserVisitInfo(req: Request) {
+  private async _generateUserVisit(params: { req: Request; type: UserVisitTypeEnum; user?: User }) {
+    const { req, type, user } = params;
+
     const { ip = null, headers } = req;
+
     const { 'user-agent': userAgent = null, referer = null } = headers;
 
-    return { ip, userAgent, referer };
+    if (user) {
+      await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
+    } else {
+      const userSeq = req.user.userSeq;
+
+      const user = await this.userRepository.findUserByUserSeq(userSeq);
+
+      if (!user) {
+        throw new HttpException('일치하는 사용자가 없습니다.', 400);
+      }
+
+      await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
+    }
   }
 }
