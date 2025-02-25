@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
-import { IPostOuathTokenRes, KisResConfig } from '../../type/interface';
+import { IPostOuathTokenRes } from '../../type/interface';
 
 @Injectable()
 export class KisService {
@@ -14,19 +14,11 @@ export class KisService {
   ) {}
 
   async postOuathToken() {
-    const ret = await this._getOuathToken();
-
-    return KisResConfig.Success<IPostOuathTokenRes>({
-      data: ret,
-    });
+    return await this._getOuathToken();
   }
 
   async deleteOuathToken() {
-    const ret = await this._deleteOuathToken();
-
-    return KisResConfig.Success({
-      data: ret,
-    });
+    return await this._deleteOuathToken();
   }
 
   private async _getOuathToken(): Promise<IPostOuathTokenRes> {
