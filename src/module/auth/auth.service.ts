@@ -1,5 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { UserAccountRepository, UserRepository } from '../../database/repository';
+import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
 import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
@@ -16,6 +16,7 @@ export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly userAccountRepository: UserAccountRepository,
+    private readonly userVisitRepository: UserVisitRepository,
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
