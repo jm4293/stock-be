@@ -153,25 +153,31 @@ export class AuthService {
     const refreshToken = req.cookies['refreshToken'] as string;
 
     if (!refreshToken) {
-      throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 400);
+      throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 403);
     }
 
-    try {
-      const { userSeq, email } = this.jwtService.verify<IJwtToken>(
-        refreshToken,
-        this.configService.get('JWT_SECRET_KEY'),
-      );
+    const { userSeq, email } = this.jwtService.verify<IJwtToken>(
+      refreshToken,
+      this.configService.get('JWT_SECRET_KEY'),
+    );
 
-      const accessToken = await this._generateJwtToken({
-        userSeq,
-        email,
-        expiresIn: ACCESS_TOKEN_TIME,
-      });
+    const savedRefreshToken = await this.userAccountRepository.getRefreshTokenByUserAccountSeq(userSeq);
 
-      return res.status(200).send({ data: { email, accessToken } });
-    } catch (e) {
-      throw new HttpException('리프레시 토큰이 유효하지 않습니다.', 400);
+    if (!savedRefreshToken) {
+      throw new HttpException('DB 리프레시 토큰이 존재하지 않습니다.', 403);
     }
+
+    if (savedRefreshToken.refreshToken !== refreshToken) {
+      throw new HttpException('리프레시 토큰이 일치하지 않습니다.', 403);
+    }
+
+    const accessToken = await this._generateJwtToken({
+      userSeq,
+      email,
+      expiresIn: ACCESS_TOKEN_TIME,
+    });
+
+    return res.status(200).send({ data: { email, accessToken } });
   }
 
   private async _generateJwtToken(params: IJwtToken) {
