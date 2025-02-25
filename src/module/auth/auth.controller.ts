@@ -10,8 +10,8 @@ export class AuthController {
 
   @Public()
   @Post('register-email')
-  async register(@Body() dto: PostCreateUserEmailDto) {
-    return await this.authService.registerEmail(dto);
+  async register(@Body() dto: PostCreateUserEmailDto, @Req() req: Request) {
+    return await this.authService.registerEmail({ dto, req });
   }
 
   @Public()
@@ -28,8 +28,8 @@ export class AuthController {
 
   @Public()
   @Post('login-email')
-  async loginEmail(@Body() dto: PostAuthLoginEmailDto, @Res() res: Response) {
-    return await this.authService.loginEmail(dto, res);
+  async loginEmail(@Body() dto: PostAuthLoginEmailDto, @Req() req: Request, @Res() res: Response) {
+    return await this.authService.loginEmail({ dto, req, res });
   }
 
   @Public()

@@ -4,7 +4,7 @@ import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
-import { UserAccountTypeEnum } from '../../type/enum';
+import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../type/enum';
 import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -24,7 +24,9 @@ export class AuthService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerEmail(dto: PostCreateUserEmailDto): Promise<IPostCreateUserEmailRes> {
+  async registerEmail(params: { dto: PostCreateUserEmailDto; req: Request }): Promise<IPostCreateUserEmailRes> {
+    const { dto, req } = params;
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -54,6 +56,16 @@ export class AuthService {
       await queryRunner.manager.save(user);
       await queryRunner.manager.save(userAccount);
 
+      const { ip, userAgent, referer } = this._getUserVisitInfo(req);
+
+      await this.userVisitRepository.createUserVisit({
+        type: UserVisitTypeEnum.SIGN_UP_EMAIL,
+        ip,
+        userAgent,
+        referer,
+        user: userAccount.user,
+      });
+
       await queryRunner.commitTransaction();
 
       return { email: userAccount.email };
@@ -75,7 +87,8 @@ export class AuthService {
     return { isExist: !!isUserAccountExist, email };
   }
 
-  async loginEmail(dto: PostAuthLoginEmailDto, res: Response) {
+  async loginEmail(params: { dto: PostAuthLoginEmailDto; req: Request; res: Response }) {
+    const { dto, req, res } = params;
     const { email, password } = dto;
 
     const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
@@ -106,6 +119,16 @@ export class AuthService {
       httpOnly: true,
       sameSite: 'strict',
       maxAge: REFRESH_TOKEN_COOKIE_TIME,
+    });
+
+    const { ip, userAgent, referer } = this._getUserVisitInfo(req);
+
+    await this.userVisitRepository.createUserVisit({
+      type: UserVisitTypeEnum.SIGN_IN_EMAIL,
+      ip,
+      userAgent,
+      referer,
+      user: userAccount.user,
     });
 
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
@@ -144,5 +167,12 @@ export class AuthService {
       { userSeq, email },
       { expiresIn, secret: this.configService.get('JWT_SECRET_KEY') },
     );
+  }
+
+  private _getUserVisitInfo(req: Request) {
+    const { ip = null, headers } = req;
+    const { 'user-agent': userAgent = null, referer = null } = headers;
+
+    return { ip, userAgent, referer };
   }
 }

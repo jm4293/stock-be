@@ -1,4 +1,6 @@
 export enum UserVisitTypeEnum {
-  SIGN_IN = 'SIGN_IN',
-  SIGN_UP = 'SIGN_UP',
+  SIGN_IN_EMAIL = 'SIGN_IN_EMAIL',
+  SIGN_IN_OAUTH = 'SIGN_IN_OAUTH',
+  SIGN_UP_EMAIL = 'SIGN_UP_EMAIL',
+  SIGN_UP_OAUTH = 'SIGN_UP_OAUTH',
 }

@@ -22,14 +22,14 @@ export class UserVisit {
   @Column({ type: 'enum', enum: UserVisitTypeEnum })
   type: UserVisitTypeEnum;
 
-  @Column({ type: 'varchar', length: 255 })
-  ip: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  ip: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
-  userAgent: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  userAgent: string | null;
 
-  @Column({ type: 'varchar', length: 255 })
-  referer: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  referer: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
