@@ -23,7 +23,7 @@ export class User {
   policy: boolean;
 
   @Column({ type: 'varchar', length: 10, nullable: true })
-  birthdate: Date;
+  birthdate: Date | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

@@ -29,10 +29,10 @@ export class UserAccount {
   email: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  password: string;
+  password: string | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  refreshToken: string;
+  refreshToken: string | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
