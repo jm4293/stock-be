@@ -16,6 +16,7 @@ import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ResConfig } from '../../config';
 
 @Injectable()
 export class AuthService {
@@ -88,7 +89,7 @@ export class AuthService {
     const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
     if (!userAccount) {
-      throw new HttpException('일치하는 사용자가 없습니다.', 400);
+      throw ResConfig.Fail_400({ message: '일치하는 사용자가 없습니다.' });
     }
 
     const isMatch = await BcryptHandler.comparePassword(password, userAccount.password as string);
@@ -136,7 +137,7 @@ export class AuthService {
 
     await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL });
 
-    return res.status(200).send({ data: {} });
+    return res.status(200);
   }
 
   async refreshToken(params: { req: Request; res: Response }) {

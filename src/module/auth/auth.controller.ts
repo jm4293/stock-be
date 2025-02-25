@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
 import { Request, Response } from 'express';
 import { Public } from '../../decorator';
+import { ResConfig } from '../../config';
 
 @Controller('auth')
 export class AuthController {
@@ -10,8 +11,10 @@ export class AuthController {
 
   @Public()
   @Post('register-email')
-  async register(@Body() dto: PostCreateUserEmailDto) {
-    return await this.authService.registerEmail(dto);
+  async register(@Body() dto: PostCreateUserEmailDto, @Res() res: Response) {
+    const ret = await this.authService.registerEmail(dto);
+
+    return ResConfig.Success({ res, statusCode: 'CREATED', data: ret });
   }
 
   @Public()
@@ -22,8 +25,10 @@ export class AuthController {
 
   @Public()
   @Post('check-email')
-  async checkEmail(@Body() dto: PostCheckEmailDto) {
-    return await this.authService.checkEmail(dto);
+  async checkEmail(@Body() dto: PostCheckEmailDto, @Res() res: Response) {
+    const ret = await this.authService.checkEmail(dto);
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
   @Public()
