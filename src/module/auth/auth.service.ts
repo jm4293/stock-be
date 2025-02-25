@@ -1,11 +1,17 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
-import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
+import {
+  IJwtToken,
+  IPostCheckEmailRes,
+  IPostCreateUserEmailRes,
+  PostAuthLoginEmailDto,
+  PostCheckEmailDto,
+  PostCreateUserEmailDto,
+} from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
 import { User } from 'src/database/entities';
 import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../type/enum';
-import { IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/interface/auth';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
@@ -131,6 +137,11 @@ export class AuthService {
       user: userAccount.user,
     });
 
+    await this.userAccountRepository.updateUserAccountRefreshToken({
+      userAccountSeq: userAccount.userAccountSeq,
+      refreshToken,
+    });
+
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
 
@@ -139,14 +150,17 @@ export class AuthService {
   async refreshToken(params: { req: Request; res: Response }) {
     const { req, res } = params;
 
-    const refreshToken = req.cookies['refreshToken'];
+    const refreshToken = req.cookies['refreshToken'] as string;
 
     if (!refreshToken) {
       throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 400);
     }
 
     try {
-      const { userSeq, email } = this.jwtService.verify(refreshToken, this.configService.get('JWT_SECRET_KEY'));
+      const { userSeq, email } = this.jwtService.verify<IJwtToken>(
+        refreshToken,
+        this.configService.get('JWT_SECRET_KEY'),
+      );
 
       const accessToken = await this._generateJwtToken({
         userSeq,
@@ -160,7 +174,7 @@ export class AuthService {
     }
   }
 
-  private async _generateJwtToken(params: { userSeq: number; email: string; expiresIn: number }) {
+  private async _generateJwtToken(params: IJwtToken) {
     const { userSeq, email, expiresIn } = params;
 
     return await this.jwtService.signAsync(

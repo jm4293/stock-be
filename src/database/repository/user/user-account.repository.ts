@@ -25,4 +25,10 @@ export class UserAccountRepository {
   async findUserAccountByEmail(email: string) {
     return await this.userAccountRepository.findOne({ where: { email }, relations: ['user'] });
   }
+
+  async updateUserAccountRefreshToken(params: { userAccountSeq: number; refreshToken: string }) {
+    const { userAccountSeq, refreshToken } = params;
+
+    return await this.userAccountRepository.update(userAccountSeq, { refreshToken });
+  }
 }
