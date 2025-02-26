@@ -4,14 +4,14 @@ import {
   IJwtToken,
   IPostCheckEmailRes,
   IPostCreateUserEmailRes,
-  PostLoginEmailDto,
-  PostCheckEmailDto,
-  PostCreateUserEmailDto,
-  PostLoginOauthDto,
+  LoginEmailDto,
+  CheckEmailDto,
+  CreateUserEmailDto,
+  LoginOauthDto,
 } from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
-import { User } from 'src/database/entities';
+import { User, UserAccount } from 'src/database/entities';
 import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../type/enum';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -35,7 +35,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async registerEmail(dto: PostCreateUserEmailDto): Promise<IPostCreateUserEmailRes> {
+  async registerEmail(dto: CreateUserEmailDto): Promise<IPostCreateUserEmailRes> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -55,7 +55,7 @@ export class AuthService {
 
       const hashedPassword = await BcryptHandler.hashPassword(password);
 
-      const userAccount = await this.userAccountRepository.createUserAccount({
+      const userAccount = await this.userAccountRepository.createUserAccountByEmail({
         type: UserAccountTypeEnum.EMAIL,
         email,
         password: hashedPassword,
@@ -76,9 +76,7 @@ export class AuthService {
     }
   }
 
-  async registerOauth() {}
-
-  async checkEmail(dto: PostCheckEmailDto): Promise<IPostCheckEmailRes> {
+  async checkEmail(dto: CheckEmailDto): Promise<IPostCheckEmailRes> {
     const { email } = dto;
 
     const isUserAccountExist = await this.userAccountRepository.findUserAccountByEmail(email);
@@ -86,7 +84,7 @@ export class AuthService {
     return { isExist: !!isUserAccountExist, email };
   }
 
-  async loginEmail(params: { dto: PostLoginEmailDto; req: Request; res: Response }) {
+  async loginEmail(params: { dto: LoginEmailDto; req: Request; res: Response }) {
     const { dto, req, res } = params;
     const { email, password } = dto;
 
@@ -102,35 +100,11 @@ export class AuthService {
       throw new HttpException('비밀번호가 일치하지 않습니다.', 400);
     }
 
-    const accessToken = await this._generateJwtToken({
-      userSeq: userAccount.user.userSeq,
-      email: userAccount.email,
-      expiresIn: ACCESS_TOKEN_TIME,
-    });
-
-    const refreshToken = await this._generateJwtToken({
-      userSeq: userAccount.user.userSeq,
-      email: userAccount.email,
-      expiresIn: REFRESH_TOKEN_TIME,
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: REFRESH_TOKEN_COOKIE_TIME,
-    });
-
-    await this.userAccountRepository.updateUserAccountRefreshToken({
-      userAccountSeq: userAccount.userAccountSeq,
-      refreshToken,
-    });
-
-    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_IN_EMAIL, user: userAccount.user });
-
-    return res.status(200).send({ data: { email: userAccount.email, accessToken } });
+    return await this._login({ req, res, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
   }
 
-  async loginOauth(dto: PostLoginOauthDto) {
+  async loginOauth(params: { dto: LoginOauthDto; req: Request; res: Response }) {
+    const { dto, req, res } = params;
     const { userAccountType, access_token } = dto;
 
     switch (userAccountType) {
@@ -139,7 +113,9 @@ export class AuthService {
           .get(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
           .pipe(
             map((response) => {
-              console.log(response);
+              const { email, name, picture } = response.data;
+
+              return { email, name, picture };
             }),
             catchError((error) => {
               console.error('Error occurred while fetching OAuth token:', error);
@@ -147,13 +123,59 @@ export class AuthService {
             }),
           );
 
-        const ret = await firstValueFrom(token);
+        const { email, name, picture } = await firstValueFrom(token);
 
-        console.log('ret', ret);
+        // userAccount 테이블에 OAuth 이메일에 동일한 user가 존재하는지 확인
+        const user = await this.userAccountRepository.findUserAccountByEmail(email);
 
-        return ret;
+        if (user) {
+          // user 테이블에 thumbnail 업데이트
+          await this.userRepository.updateUserByUserSeq({ ...user.user, thumbnail: picture });
 
-        break;
+          // userAccount 테이블에 동일한 이메일의 userAccountType이 존재하는지 확인
+          const isUserAccountGoogleExist = await this.userAccountRepository.findUserAccountTypeByEmail({
+            email,
+            type: UserAccountTypeEnum.GOOGLE,
+          });
+
+          if (!isUserAccountGoogleExist) {
+            const userAccount = await this.userAccountRepository.createUserAccountByOauth({
+              type: UserAccountTypeEnum.GOOGLE,
+              email,
+              user: user.user,
+            });
+
+            return await this._login({
+              req,
+              res,
+              userAccount,
+              type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
+            });
+          } else {
+            return await this._login({
+              req,
+              res,
+              userAccount: isUserAccountGoogleExist,
+              type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
+            });
+          }
+        } else {
+          const user = await this.userRepository.createUser({
+            nickname: name,
+            name,
+            policy: true,
+            birthdate: undefined,
+            thumbnail: picture,
+          });
+
+          const userAccount = await this.userAccountRepository.createUserAccountByOauth({
+            type: UserAccountTypeEnum.GOOGLE,
+            email,
+            user,
+          });
+
+          return await this._login({ req, res, userAccount, type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE });
+        }
       case UserAccountTypeEnum.KAKAO:
         break;
       case UserAccountTypeEnum.NAVER:
@@ -239,5 +261,36 @@ export class AuthService {
 
       await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
     }
+  }
+
+  private async _login(params: { req: Request; res: Response; userAccount: UserAccount; type: UserVisitTypeEnum }) {
+    const { req, res, userAccount, type } = params;
+
+    const accessToken = await this._generateJwtToken({
+      userSeq: userAccount.user.userSeq,
+      email: userAccount.email,
+      expiresIn: ACCESS_TOKEN_TIME,
+    });
+
+    const refreshToken = await this._generateJwtToken({
+      userSeq: userAccount.user.userSeq,
+      email: userAccount.email,
+      expiresIn: REFRESH_TOKEN_TIME,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: REFRESH_TOKEN_COOKIE_TIME,
+    });
+
+    await this.userAccountRepository.updateUserAccountRefreshToken({
+      userAccount: userAccount,
+      refreshToken,
+    });
+
+    await this._generateUserVisit({ req, type, user: userAccount.user });
+
+    return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
 }
