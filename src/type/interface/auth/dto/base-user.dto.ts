@@ -3,4 +3,5 @@ export class BaseUserDto {
   name: string;
   policy: boolean;
   birthdate?: string;
+  thumbnail?: string;
 }

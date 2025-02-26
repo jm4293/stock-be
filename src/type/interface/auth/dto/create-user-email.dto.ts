@@ -2,7 +2,7 @@ import { BaseUserDto } from './base-user.dto';
 import { BaseUserAccountDto } from './base-user-account.dto';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class PostCreateUserEmailDto implements BaseUserDto, BaseUserAccountDto {
+export class CreateUserEmailDto implements BaseUserDto, BaseUserAccountDto {
   // BaseUserDto 속성
   @IsString()
   @IsNotEmpty()
@@ -18,7 +18,11 @@ export class PostCreateUserEmailDto implements BaseUserDto, BaseUserAccountDto {
 
   @IsString()
   @IsOptional()
-  birthdate: string;
+  birthdate?: string;
+
+  @IsString()
+  @IsOptional()
+  thumbnail?: string;
 
   // BaseUserAccountDto 속성
   @IsString()
