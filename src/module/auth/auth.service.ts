@@ -4,9 +4,10 @@ import {
   IJwtToken,
   IPostCheckEmailRes,
   IPostCreateUserEmailRes,
-  PostAuthLoginEmailDto,
+  PostLoginEmailDto,
   PostCheckEmailDto,
   PostCreateUserEmailDto,
+  PostLoginOauthDto,
 } from '../../type/interface';
 import { DataSource } from 'typeorm';
 import { BcryptHandler } from '../../handler';
@@ -17,6 +18,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ResConfig } from '../../config';
+import { HttpService } from '@nestjs/axios';
+import { catchError, firstValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +30,7 @@ export class AuthService {
 
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -82,7 +86,7 @@ export class AuthService {
     return { isExist: !!isUserAccountExist, email };
   }
 
-  async loginEmail(params: { dto: PostAuthLoginEmailDto; req: Request; res: Response }) {
+  async loginEmail(params: { dto: PostLoginEmailDto; req: Request; res: Response }) {
     const { dto, req, res } = params;
     const { email, password } = dto;
 
@@ -126,7 +130,40 @@ export class AuthService {
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
 
-  async loginOauth() {}
+  async loginOauth(dto: PostLoginOauthDto) {
+    const { userAccountType, access_token } = dto;
+
+    switch (userAccountType) {
+      case UserAccountTypeEnum.GOOGLE:
+        const token = this.httpService
+          .get(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
+          .pipe(
+            map((response) => {
+              console.log(response);
+            }),
+            catchError((error) => {
+              console.error('Error occurred while fetching OAuth token:', error);
+              throw new Error('Failed to fetch OAuth token');
+            }),
+          );
+
+        const ret = await firstValueFrom(token);
+
+        console.log('ret', ret);
+
+        return ret;
+
+        break;
+      case UserAccountTypeEnum.KAKAO:
+        break;
+      case UserAccountTypeEnum.NAVER:
+        break;
+      default:
+        break;
+    }
+
+    return;
+  }
 
   async logoutEmail(params: { req: Request; res: Response }) {
     const { req, res } = params;

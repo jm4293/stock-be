@@ -1,4 +1,4 @@
-export class PostAuthLoginEmailDto {
+export class PostLoginEmailDto {
   email: string;
   password: string;
 }

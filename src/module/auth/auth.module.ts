@@ -6,9 +6,14 @@ import { User, UserAccount, UserVisit } from '../../database/entities';
 import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtModuleConfig } from '../../config';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserAccount, UserVisit]), JwtModule.registerAsync(jwtModuleConfig)],
+  imports: [
+    TypeOrmModule.forFeature([User, UserAccount, UserVisit]),
+    JwtModule.registerAsync(jwtModuleConfig),
+    HttpModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService, UserRepository, UserAccountRepository, UserVisitRepository],
   exports: [JwtModule],

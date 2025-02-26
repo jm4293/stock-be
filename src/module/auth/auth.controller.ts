@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { PostAuthLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto } from '../../type/interface';
+import { PostLoginEmailDto, PostCheckEmailDto, PostCreateUserEmailDto, PostLoginOauthDto } from '../../type/interface';
 import { Request, Response } from 'express';
 import { Public } from '../../decorator';
 import { ResConfig } from '../../config';
@@ -33,14 +33,14 @@ export class AuthController {
 
   @Public()
   @Post('login-email')
-  async loginEmail(@Body() dto: PostAuthLoginEmailDto, @Req() req: Request, @Res() res: Response) {
+  async loginEmail(@Body() dto: PostLoginEmailDto, @Req() req: Request, @Res() res: Response) {
     return await this.authService.loginEmail({ dto, req, res });
   }
 
   @Public()
   @Post('login-oauth')
-  loginOauth() {
-    return this.authService.loginOauth();
+  loginOauth(@Body() dto: PostLoginOauthDto) {
+    return this.authService.loginOauth(dto);
   }
 
   @Post('logout-email')
