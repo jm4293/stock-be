@@ -25,6 +25,9 @@ export class User {
   @Column({ type: 'varchar', length: 10, nullable: true })
   birthdate: Date | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  thumbnail: string | null;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
