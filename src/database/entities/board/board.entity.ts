@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -22,6 +23,9 @@ export class Board {
   @Column({ type: 'text' })
   content: string;
 
+  @Column({ type: 'int', default: 0 })
+  viewCount: number;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
@@ -31,7 +35,7 @@ export class Board {
   @Column({ type: 'boolean', default: false })
   isDeleted: boolean;
 
-  @Column({ type: 'timestamp', nullable: true, default: null })
+  @DeleteDateColumn({ type: 'timestamp', default: null })
   deletedAt: Date | null;
 
   @ManyToOne(() => User, (user) => user.board)

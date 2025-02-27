@@ -17,4 +17,8 @@ export class BoardRepository extends Repository<Board> {
 
     return board;
   }
+
+  async increaseBoardViewCount(boardSeq: number) {
+    await this.increment({ boardSeq }, 'viewCount', 1);
+  }
 }

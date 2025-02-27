@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Req, Res } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { Public } from '../../decorator';
 import { CreateBoardDto, UpdateBoardDto } from '../../type/dto';
 import { Request, Response } from 'express';
+import { ResConfig } from '../../config';
 
 @Controller('board')
 export class BoardController {
@@ -10,19 +11,25 @@ export class BoardController {
 
   @Public()
   @Get()
-  async getBoardList() {
-    return await this.boardService.getBoardList();
+  async getBoardList(@Res() res: Response) {
+    const ret = await this.boardService.getBoardList();
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
   @Public()
   @Get(':seq')
-  async getBoardDetail(@Param('seq', ParseIntPipe) seq: number) {
-    return await this.boardService.getBoardDetail(seq);
+  async getBoardDetail(@Param('seq', ParseIntPipe) seq: number, @Res() res: Response) {
+    const ret = await this.boardService.getBoardDetail(seq);
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
   @Post()
   async createBoard(@Body() dto: CreateBoardDto, @Req() req: Request, @Res() res: Response) {
-    return await this.boardService.createBoard({ dto, req, res });
+    await this.boardService.createBoard({ dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'CREATED' });
   }
 
   @Patch(':boardSeq')
@@ -32,6 +39,15 @@ export class BoardController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    return await this.boardService.updateBoard({ boardSeq, dto, req, res });
+    await this.boardService.updateBoard({ boardSeq, dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
+  }
+
+  @Delete(':boardSeq')
+  async deleteBoard(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Req() req: Request, @Res() res: Response) {
+    await this.boardService.deleteBoard({ boardSeq, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
   }
 }
