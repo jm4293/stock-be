@@ -1,4 +1,4 @@
-import { UserAccountTypeEnum } from '../../../enum';
+import { UserAccountTypeEnum } from '../../../../constant/enum';
 
 export class LoginOauthDto {
   userAccountType: UserAccountTypeEnum;

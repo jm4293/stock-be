@@ -1,4 +1,4 @@
-import { ResEnum } from '../type/enum';
+import { ResEnum } from '../constant/enum';
 import { HttpStatus, BadRequestException } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common/exceptions/internal-server-error.exception';
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception';

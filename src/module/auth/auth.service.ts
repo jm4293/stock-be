@@ -11,7 +11,7 @@ import {
 } from '../../type/interface';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
-import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../type/enum';
+import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
@@ -89,9 +89,13 @@ export class AuthService {
     const { userAccountType, access_token } = dto;
 
     switch (userAccountType) {
-      case UserAccountTypeEnum.GOOGLE:
+      case UserAccountTypeEnum.GOOGLE: {
         const token = this.httpService
-          .get(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
+          .get<{
+            email: string;
+            name: string;
+            picture: string;
+          }>(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
           .pipe(
             map((response) => {
               const { email, name, picture } = response.data;
@@ -157,6 +161,7 @@ export class AuthService {
 
           return await this._login({ req, res, userAccount, type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE });
         }
+      }
       case UserAccountTypeEnum.KAKAO:
         break;
       case UserAccountTypeEnum.NAVER:

@@ -8,7 +8,7 @@ import {
   Column,
 } from 'typeorm';
 import { User } from './user.entity';
-import { UserAccountStatusEnum, UserAccountTypeEnum } from '../../../type/enum';
+import { UserAccountStatusEnum, UserAccountTypeEnum } from '../../../constant/enum';
 
 @Entity()
 export class UserAccount {

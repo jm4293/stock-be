@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Column } from 'typeorm';
 import { UserAccount } from './user-account.entity';
-import { UserStatusEnum, UserTypeEnum } from '../../../type/enum';
+import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
 
 @Entity()
 export class User {
