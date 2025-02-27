@@ -75,7 +75,7 @@ export class AuthService {
       throw new HttpException('비밀번호가 일치하지 않습니다.', 400);
     }
 
-    return await this._login({ req, res, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
+    return await this._login({ req, res, user: userAccount.user, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
   }
 
   async loginOauth(params: { dto: LoginOauthDto; req: Request; res: Response }) {
@@ -110,12 +110,14 @@ export class AuthService {
 
           const userAccountGoogle = await this.userAccountRepository.findOne({
             where: { email, type: UserAccountTypeEnum.GOOGLE },
+            relations: ['user'],
           });
 
           if (userAccountGoogle) {
             return await this._login({
               req,
               res,
+              user: userAccountGoogle.user,
               userAccount: userAccountGoogle,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
             });
@@ -129,6 +131,7 @@ export class AuthService {
             return await this._login({
               req,
               res,
+              user: newUserAccount.user,
               userAccount: newUserAccount,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
             });
@@ -151,6 +154,7 @@ export class AuthService {
           return await this._login({
             req,
             res,
+            user: newUser,
             userAccount: newUserAccount,
             type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
           });
@@ -224,16 +228,22 @@ export class AuthService {
     );
   }
 
-  private async _login(params: { req: Request; res: Response; userAccount: UserAccount; type: UserVisitTypeEnum }) {
-    const { req, res, userAccount, type } = params;
+  private async _login(params: {
+    req: Request;
+    res: Response;
+    user: User;
+    userAccount: UserAccount;
+    type: UserVisitTypeEnum;
+  }) {
+    const { req, res, user, userAccount, type } = params;
 
     const accessToken = await this._generateJwtToken({
-      userSeq: userAccount.user.userSeq,
+      userSeq: user.userSeq,
       expiresIn: ACCESS_TOKEN_TIME,
     });
 
     const refreshToken = await this._generateJwtToken({
-      userSeq: userAccount.user.userSeq,
+      userSeq: user.userSeq,
       expiresIn: REFRESH_TOKEN_TIME,
     });
 
@@ -243,11 +253,12 @@ export class AuthService {
       maxAge: REFRESH_TOKEN_COOKIE_TIME,
     });
 
-    await this.userAccountRepository.update({ user: userAccount.user }, { refreshToken: null });
+    await this.userAccountRepository.manager.transaction(async (manager) => {
+      await manager.update(UserAccount, { user: { userSeq: user.userSeq } }, { refreshToken: null });
+      await manager.update(UserAccount, { userAccountSeq: userAccount.userAccountSeq }, { refreshToken });
+    });
 
-    await this.userAccountRepository.update({ userAccountSeq: userAccount.userAccountSeq }, { refreshToken });
-
-    await this._generateUserVisit({ req, type, user: userAccount.user });
+    await this._generateUserVisit({ req, type, user });
 
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
