@@ -1,20 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { User, UserVisit } from '../../entities';
 
 @Injectable()
-export class UserVisitRepository {
-  constructor(
-    @InjectRepository(UserVisit)
-    private readonly userVisitRepository: Repository<UserVisit>,
-  ) {}
+export class UserVisitRepository extends Repository<UserVisit> {
+  constructor(manager: EntityManager) {
+    super(UserVisit, manager);
+  }
 
   async createUserVisit(dto: Pick<UserVisit, 'type' | 'ip' | 'userAgent' | 'referer'> & { user: User }) {
     const { type, ip, userAgent, referer, user } = dto;
 
-    const userVisit = this.userVisitRepository.create({ user, type, ip, userAgent, referer });
+    const userVisit = this.create({ user, type, ip, userAgent, referer });
 
-    return await this.userVisitRepository.save(userVisit);
+    return await this.save(userVisit);
   }
 }

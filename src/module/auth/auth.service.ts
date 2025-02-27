@@ -31,32 +31,32 @@ export class AuthService {
 
     let user: User;
 
-    const isUserAccountExist = await this.userAccountRepository.findUserAccountByEmail(email);
+    const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
-    if (isUserAccountExist) {
-      user = isUserAccountExist.user;
+    if (userAccount) {
+      user = userAccount.user;
     } else {
       user = await this.userRepository.createUser({ nickname, name, policy, birthdate });
     }
 
     const hashedPassword = await BcryptHandler.hashPassword(password);
 
-    const userAccount = await this.userAccountRepository.createUserAccountByEmail({
+    const newUserAccount = await this.userAccountRepository.createUserAccountByEmail({
       type: UserAccountTypeEnum.EMAIL,
       email,
       password: hashedPassword,
       user,
     });
 
-    return { email: userAccount.email };
+    return { email: newUserAccount.email };
   }
 
   async checkEmail(dto: CheckEmailDto): Promise<IPostCheckEmailRes> {
     const { email } = dto;
 
-    const isUserAccountExist = await this.userAccountRepository.findUserAccountByEmail(email);
+    const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
-    return { isExist: !!isUserAccountExist, email };
+    return { isExist: !!userAccount, email };
   }
 
   async loginEmail(params: { dto: LoginEmailDto; req: Request; res: Response }) {
@@ -100,42 +100,41 @@ export class AuthService {
 
         const { email, name, picture } = await firstValueFrom<IGetOauthGoogleTokenRes>(token);
 
-        // userAccount 테이블에 OAuth 이메일에 동일한 user가 존재하는지 확인
-        const user = await this.userAccountRepository.findUserAccountByEmail(email);
+        const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
-        if (user) {
-          // user 테이블에 thumbnail 업데이트
-          await this.userRepository.updateUserByUserSeq({ ...user.user, thumbnail: picture });
+        if (userAccount) {
+          await this.userRepository.update(
+            { userSeq: userAccount.user.userSeq },
+            { nickname: name, name, thumbnail: picture },
+          );
 
-          // userAccount 테이블에 동일한 이메일의 userAccountType이 존재하는지 확인
-          const isUserAccountGoogleExist = await this.userAccountRepository.findUserAccountTypeByEmail({
-            email,
-            type: UserAccountTypeEnum.GOOGLE,
+          const userAccountGoogle = await this.userAccountRepository.findOne({
+            where: { email, type: UserAccountTypeEnum.GOOGLE },
           });
 
-          if (!isUserAccountGoogleExist) {
-            const userAccount = await this.userAccountRepository.createUserAccountByOauth({
-              type: UserAccountTypeEnum.GOOGLE,
-              email,
-              user: user.user,
-            });
-
+          if (userAccountGoogle) {
             return await this._login({
               req,
               res,
-              userAccount,
+              userAccount: userAccountGoogle,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
             });
           } else {
+            const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
+              type: UserAccountTypeEnum.GOOGLE,
+              email,
+              user: userAccount.user,
+            });
+
             return await this._login({
               req,
               res,
-              userAccount: isUserAccountGoogleExist,
+              userAccount: newUserAccount,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
             });
           }
         } else {
-          const user = await this.userRepository.createUser({
+          const newUser = await this.userRepository.createUser({
             nickname: name,
             name,
             policy: true,
@@ -143,13 +142,18 @@ export class AuthService {
             thumbnail: picture,
           });
 
-          const userAccount = await this.userAccountRepository.createUserAccountByOauth({
+          const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
             type: UserAccountTypeEnum.GOOGLE,
             email,
-            user,
+            user: newUser,
           });
 
-          return await this._login({ req, res, userAccount, type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE });
+          return await this._login({
+            req,
+            res,
+            userAccount: newUserAccount,
+            type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
+          });
         }
       }
       case UserAccountTypeEnum.KAKAO:
@@ -165,12 +169,19 @@ export class AuthService {
 
   async logoutEmail(params: { req: Request; res: Response }) {
     const { req, res } = params;
+    const { userSeq } = req.user;
+
+    const user = await this.userRepository.findOne({ where: { userSeq } });
+
+    if (!user) {
+      throw ResConfig.Fail_400({ message: '일치하는 사용자가 없습니다.' });
+    }
+
+    await this.userAccountRepository.update({ user }, { refreshToken: null });
+
+    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
 
     res.clearCookie('refreshToken');
-
-    await this.userAccountRepository.clearUserAccountRefreshToken(req.user.userSeq);
-
-    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL });
 
     return res.status(200);
   }
@@ -184,59 +195,33 @@ export class AuthService {
       throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 403);
     }
 
-    const { userSeq, email } = this.jwtService.verify<IJwtToken>(
-      refreshToken,
-      this.configService.get('JWT_SECRET_KEY'),
-    );
+    const { userSeq } = this.jwtService.verify<IJwtToken>(refreshToken, this.configService.get('JWT_SECRET_KEY'));
 
-    const savedRefreshToken = await this.userAccountRepository.getRefreshTokenByUserAccountSeq(userSeq);
+    const savedRefreshToken = await this.userAccountRepository.findOne({
+      where: { user: { userSeq } },
+      select: ['refreshToken'],
+    });
 
     if (!savedRefreshToken) {
       throw new HttpException('DB 리프레시 토큰이 존재하지 않습니다.', 403);
     }
 
-    if (savedRefreshToken.refreshToken !== refreshToken) {
+    if (refreshToken !== savedRefreshToken.refreshToken) {
       throw new HttpException('리프레시 토큰이 일치하지 않습니다.', 403);
     }
 
-    const accessToken = await this._generateJwtToken({
-      userSeq,
-      email,
-      expiresIn: ACCESS_TOKEN_TIME,
-    });
+    const accessToken = await this._generateJwtToken({ userSeq, expiresIn: ACCESS_TOKEN_TIME });
 
-    return res.status(200).send({ data: { email, accessToken } });
+    return res.status(200).send({ data: { accessToken } });
   }
 
   private async _generateJwtToken(params: IJwtToken) {
-    const { userSeq, email, expiresIn } = params;
+    const { userSeq, expiresIn } = params;
 
     return await this.jwtService.signAsync(
-      { userSeq, email },
+      { userSeq },
       { expiresIn, secret: this.configService.get('JWT_SECRET_KEY') },
     );
-  }
-
-  private async _generateUserVisit(params: { req: Request; type: UserVisitTypeEnum; user?: User }) {
-    const { req, type, user } = params;
-
-    const { ip = null, headers } = req;
-
-    const { 'user-agent': userAgent = null, referer = null } = headers;
-
-    if (user) {
-      await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
-    } else {
-      const userSeq = req.user.userSeq;
-
-      const user = await this.userRepository.findUserByUserSeq(userSeq);
-
-      if (!user) {
-        throw new HttpException('일치하는 사용자가 없습니다.', 400);
-      }
-
-      await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
-    }
   }
 
   private async _login(params: { req: Request; res: Response; userAccount: UserAccount; type: UserVisitTypeEnum }) {
@@ -244,13 +229,11 @@ export class AuthService {
 
     const accessToken = await this._generateJwtToken({
       userSeq: userAccount.user.userSeq,
-      email: userAccount.email,
       expiresIn: ACCESS_TOKEN_TIME,
     });
 
     const refreshToken = await this._generateJwtToken({
       userSeq: userAccount.user.userSeq,
-      email: userAccount.email,
       expiresIn: REFRESH_TOKEN_TIME,
     });
 
@@ -260,13 +243,20 @@ export class AuthService {
       maxAge: REFRESH_TOKEN_COOKIE_TIME,
     });
 
-    await this.userAccountRepository.updateUserAccountRefreshToken({
-      userAccount: userAccount,
-      refreshToken,
-    });
+    await this.userAccountRepository.update({ user: userAccount.user }, { refreshToken: null });
+
+    await this.userAccountRepository.update({ userAccountSeq: userAccount.userAccountSeq }, { refreshToken });
 
     await this._generateUserVisit({ req, type, user: userAccount.user });
 
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
+  }
+
+  private async _generateUserVisit(params: { req: Request; type: UserVisitTypeEnum; user: User }) {
+    const { req, type, user } = params;
+    const { headers, ip = null } = req;
+    const { 'user-agent': userAgent = null, referer = null } = headers;
+
+    await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
   }
 }
