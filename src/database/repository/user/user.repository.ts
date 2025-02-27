@@ -16,4 +16,14 @@ export class UserRepository extends Repository<User> {
 
     return await this.save(user);
   }
+
+  async findUserByUserSeq(userSeq: number) {
+    const user = await this.findOne({ where: { userSeq } });
+
+    if (!user) {
+      throw new Error('사용자 정보가 존재하지 않습니다.');
+    }
+
+    return user;
+  }
 }
