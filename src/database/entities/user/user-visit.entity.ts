@@ -15,10 +15,6 @@ export class UserVisit {
   @PrimaryGeneratedColumn()
   userVisitSeq: number;
 
-  @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userSeq' })
-  user: User;
-
   @Column({ type: 'enum', enum: UserVisitTypeEnum })
   type: UserVisitTypeEnum;
 
@@ -36,4 +32,8 @@ export class UserVisit {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userSeq' })
+  user: User;
 }
