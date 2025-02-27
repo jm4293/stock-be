@@ -42,7 +42,7 @@ export class AuthService {
     const hashedPassword = await BcryptHandler.hashPassword(password);
 
     const newUserAccount = await this.userAccountRepository.createUserAccountByEmail({
-      type: UserAccountTypeEnum.EMAIL,
+      accountType: UserAccountTypeEnum.EMAIL,
       email,
       password: hashedPassword,
       user,
@@ -109,7 +109,7 @@ export class AuthService {
           );
 
           const userAccountGoogle = await this.userAccountRepository.findOne({
-            where: { email, type: UserAccountTypeEnum.GOOGLE },
+            where: { email, accountType: UserAccountTypeEnum.GOOGLE },
             relations: ['user'],
           });
 
@@ -123,7 +123,7 @@ export class AuthService {
             });
           } else {
             const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
-              type: UserAccountTypeEnum.GOOGLE,
+              accountType: UserAccountTypeEnum.GOOGLE,
               email,
               user: userAccount.user,
             });
@@ -146,7 +146,7 @@ export class AuthService {
           });
 
           const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
-            type: UserAccountTypeEnum.GOOGLE,
+            accountType: UserAccountTypeEnum.GOOGLE,
             email,
             user: newUser,
           });
@@ -199,11 +199,13 @@ export class AuthService {
       throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 403);
     }
 
-    const { userSeq } = this.jwtService.verify<IJwtToken>(refreshToken, this.configService.get('JWT_SECRET_KEY'));
+    const { userSeq, accountType } = this.jwtService.verify<IJwtToken>(
+      refreshToken,
+      this.configService.get('JWT_SECRET_KEY'),
+    );
 
     const savedRefreshToken = await this.userAccountRepository.findOne({
-      where: { user: { userSeq } },
-      select: ['refreshToken'],
+      where: { user: { userSeq }, accountType },
     });
 
     if (!savedRefreshToken) {
@@ -214,16 +216,16 @@ export class AuthService {
       throw new HttpException('리프레시 토큰이 일치하지 않습니다.', 403);
     }
 
-    const accessToken = await this._generateJwtToken({ userSeq, expiresIn: ACCESS_TOKEN_TIME });
+    const accessToken = await this._generateJwtToken({ userSeq, accountType, expiresIn: ACCESS_TOKEN_TIME });
 
     return res.status(200).send({ data: { accessToken } });
   }
 
   private async _generateJwtToken(params: IJwtToken) {
-    const { userSeq, expiresIn } = params;
+    const { userSeq, accountType, expiresIn } = params;
 
     return await this.jwtService.signAsync(
-      { userSeq },
+      { userSeq, accountType },
       { expiresIn, secret: this.configService.get('JWT_SECRET_KEY') },
     );
   }
@@ -239,11 +241,13 @@ export class AuthService {
 
     const accessToken = await this._generateJwtToken({
       userSeq: user.userSeq,
+      accountType: userAccount.accountType,
       expiresIn: ACCESS_TOKEN_TIME,
     });
 
     const refreshToken = await this._generateJwtToken({
       userSeq: user.userSeq,
+      accountType: userAccount.accountType,
       expiresIn: REFRESH_TOKEN_TIME,
     });
 

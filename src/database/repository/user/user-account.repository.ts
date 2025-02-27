@@ -11,19 +11,21 @@ export class UserAccountRepository extends Repository<UserAccount> {
   }
 
   async createUserAccountByEmail(
-    dto: Pick<CreateUserEmailDto, 'email' | 'password'> & { user: User; type: UserAccountTypeEnum },
+    dto: Pick<CreateUserEmailDto, 'email' | 'password'> & { user: User; accountType: UserAccountTypeEnum },
   ) {
-    const { user, type, email, password } = dto;
+    const { user, accountType, email, password } = dto;
 
-    const userAccount = this.create({ user, type, email, password });
+    const userAccount = this.create({ user, accountType, email, password });
 
     return await this.save(userAccount);
   }
 
-  async createUserAccountByOauth(dto: Pick<CreateUserEmailDto, 'email'> & { user: User; type: UserAccountTypeEnum }) {
-    const { user, type, email } = dto;
+  async createUserAccountByOauth(
+    dto: Pick<CreateUserEmailDto, 'email'> & { user: User; accountType: UserAccountTypeEnum },
+  ) {
+    const { user, accountType, email } = dto;
 
-    const userAccount = this.create({ user, type, email });
+    const userAccount = this.create({ user, accountType, email });
 
     return await this.save(userAccount);
   }
