@@ -8,6 +8,7 @@ import {
   CheckEmailDto,
   CreateUserEmailDto,
   LoginOauthDto,
+  IGetOauthGoogleTokenRes,
 } from '../../type/interface';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
@@ -91,11 +92,7 @@ export class AuthService {
     switch (userAccountType) {
       case UserAccountTypeEnum.GOOGLE: {
         const token = this.httpService
-          .get<{
-            email: string;
-            name: string;
-            picture: string;
-          }>(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
+          .get<IGetOauthGoogleTokenRes>(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
           .pipe(
             map((response) => {
               const { email, name, picture } = response.data;
@@ -108,7 +105,7 @@ export class AuthService {
             }),
           );
 
-        const { email, name, picture } = await firstValueFrom(token);
+        const { email, name, picture } = await firstValueFrom<IGetOauthGoogleTokenRes>(token);
 
         // userAccount 테이블에 OAuth 이메일에 동일한 user가 존재하는지 확인
         const user = await this.userAccountRepository.findUserAccountByEmail(email);
