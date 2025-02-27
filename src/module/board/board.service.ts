@@ -12,14 +12,21 @@ export class BoardService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async getBoardList() {
-    const [boardList, total] = await this.boardRepository.findAndCount({
+  async getBoardList(pageParam: number) {
+    const LIMIT = 1;
+
+    const [boards, total] = await this.boardRepository.findAndCount({
       where: { isDeleted: false },
       order: { createdAt: 'DESC' },
+      skip: (pageParam - 1) * LIMIT,
+      take: LIMIT,
       relations: ['user'],
     });
 
-    return { boardList, total };
+    const hasNextPage = pageParam * LIMIT < total;
+    const nextPage = hasNextPage ? pageParam + 1 : null;
+
+    return { boards, total, nextPage };
   }
 
   async getBoardDetail(boardSeq: number) {

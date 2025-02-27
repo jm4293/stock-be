@@ -9,7 +9,7 @@ export class BoardRepository extends Repository<Board> {
   }
 
   async findBoardByBoardSeq(boardSeq: number) {
-    const board = await this.findOne({ where: { boardSeq } });
+    const board = await this.findOne({ where: { boardSeq }, relations: ['user'] });
 
     if (!board) {
       throw new Error('게시물이 존재하지 않습니다.');
