@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthGuardConfig, configModuleConfig, typeormModuleConfig } from './config';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, BoardModule, KisModule } from './module';
+import { AuthModule, BoardModule, KisModule, UserModule } from './module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -16,9 +16,10 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [
     ConfigModule.forRoot(configModuleConfig),
     TypeOrmModule.forRootAsync(typeormModuleConfig),
-    KisModule,
     AuthModule,
     BoardModule,
+    KisModule,
+    UserModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: AuthGuardConfig }],

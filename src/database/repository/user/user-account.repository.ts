@@ -33,4 +33,10 @@ export class UserAccountRepository extends Repository<UserAccount> {
   async findUserAccountByEmail(email: string) {
     return await this.findOne({ where: { email }, relations: ['user'] });
   }
+
+  async findUserAccountByUserSeq(params: { userSeq: number; accountType?: UserAccountTypeEnum }) {
+    const { userSeq, accountType } = params;
+
+    return await this.findOne({ where: { user: { userSeq }, accountType }, relations: ['user'] });
+  }
 }
