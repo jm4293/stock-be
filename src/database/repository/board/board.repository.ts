@@ -7,4 +7,14 @@ export class BoardRepository extends Repository<Board> {
   constructor(manager: EntityManager) {
     super(Board, manager);
   }
+
+  async findBoardByBoardSeq(boardSeq: number) {
+    const board = await this.findOne({ where: { boardSeq } });
+
+    if (!board) {
+      throw new Error('게시물이 존재하지 않습니다.');
+    }
+
+    return board;
+  }
 }
