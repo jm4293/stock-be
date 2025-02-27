@@ -1,4 +1,4 @@
-export interface IUpdateUserDto {
+export interface IUpdateUser {
   userSeq: number;
   nickname: string;
   name: string;

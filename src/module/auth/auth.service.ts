@@ -1,15 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
-import {
-  IJwtToken,
-  IPostCheckEmailRes,
-  IPostCreateUserEmailRes,
-  LoginEmailDto,
-  CheckEmailDto,
-  CreateUserEmailDto,
-  LoginOauthDto,
-  IGetOauthGoogleTokenRes,
-} from '../../type/interface';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
 import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
@@ -20,6 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import { ResConfig } from '../../config';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
+import { CheckEmailDto, CreateUserEmailDto, LoginEmailDto, LoginOauthDto } from '../../type/dto';
+import { IGetOauthGoogleTokenRes, IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/res';
+import { IJwtToken } from '../../type/interface';
 
 @Injectable()
 export class AuthService {

@@ -2,7 +2,6 @@ import { Controller, Delete, Get, Res } from '@nestjs/common';
 import { KisService } from './kis.service';
 import { ResConfig } from '../../config';
 import { Response } from 'express';
-import { IPostOuathTokenRes } from '../../type/interface';
 
 @Controller('kis')
 export class KisController {

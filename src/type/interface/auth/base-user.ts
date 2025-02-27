@@ -1,4 +1,4 @@
-export class BaseUserDto {
+export interface IBaseUser {
   nickname: string;
   name: string;
   policy: boolean;

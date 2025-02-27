@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User, UserAccount } from '../../entities';
 import { Repository } from 'typeorm';
-import { CreateUserEmailDto } from '../../../type/interface';
 import { UserAccountTypeEnum } from '../../../constant/enum';
+import { CreateUserEmailDto } from '../../../type/dto';
 
 @Injectable()
 export class UserAccountRepository {

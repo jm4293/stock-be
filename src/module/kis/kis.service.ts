@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
-import { IPostOuathTokenRes } from '../../type/interface';
+import { IPostOuathTokenRes } from '../../type/res';
 
 @Injectable()
 export class KisService {
@@ -62,6 +62,6 @@ export class KisService {
         }),
       );
 
-    return await firstValueFrom(ret);
+    return await firstValueFrom<boolean>(ret);
   }
 }

@@ -1,1 +1,1 @@
-export * from './jwt-token.type';
+export * from './jwt-token';

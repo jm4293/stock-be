@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities';
-import { CreateUserEmailDto, IUpdateUserDto } from '../../../type/interface';
+import { CreateUserEmailDto } from '../../../type/dto';
+import { IUpdateUser } from '../../../type/interface';
 
 @Injectable()
 export class UserRepository {
@@ -23,7 +24,7 @@ export class UserRepository {
     return await this.userRepository.findOne({ where: { userSeq } });
   }
 
-  async updateUserByUserSeq(params: IUpdateUserDto) {
+  async updateUserByUserSeq(params: IUpdateUser) {
     const { userSeq, nickname, name, birthdate, thumbnail } = params;
 
     return await this.userRepository.update({ userSeq }, { nickname, name, birthdate, thumbnail });
