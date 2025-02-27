@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { User } from '../user';
 import { BoardComment } from './board-comment.entity';
+import { BoardLike } from './board-like.entity';
 
 @Entity()
 export class Board {
@@ -44,4 +45,7 @@ export class Board {
 
   @OneToMany(() => BoardComment, (boardComment) => boardComment.board)
   boardComment: BoardComment;
+
+  @OneToMany(() => BoardLike, (boardLike) => boardLike.board)
+  boardLike: BoardLike;
 }

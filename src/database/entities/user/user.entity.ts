@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { UserAccount } from './user-account.entity';
 import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
-import { Board, BoardComment } from '../board';
+import { Board, BoardComment, BoardLike } from '../board';
 
 @Entity()
 export class User {
@@ -51,4 +51,7 @@ export class User {
 
   @OneToOne(() => BoardComment, (boardComment) => boardComment.user)
   boardComment: BoardComment;
+
+  @OneToOne(() => BoardLike, (boardLike) => boardLike.user)
+  boardLike: BoardLike;
 }
