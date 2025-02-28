@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BoardCommentRepository, BoardRepository, UserRepository } from '../../database/repository';
 import { ResConfig } from '../../config';
-import { CreateBoardDto, UpdateBoardDto } from '../../type/dto';
-import { Request, Response } from 'express';
+import { CreateBoardCommentDto, CreateBoardDto, UpdateBoardCommentDto, UpdateBoardDto } from '../../type/dto';
+import { Request } from 'express';
 
 @Injectable()
 export class BoardService {
@@ -12,6 +12,7 @@ export class BoardService {
     private readonly userRepository: UserRepository,
   ) {}
 
+  // 게시판
   async getBoardList(pageParam: number) {
     const LIMIT = 1;
 
@@ -55,7 +56,6 @@ export class BoardService {
     const { userSeq } = req.user;
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
-
     const board = this.boardRepository.create({ ...dto, user });
 
     await this.boardRepository.save(board);
@@ -66,7 +66,6 @@ export class BoardService {
     const { userSeq } = req.user;
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
-
     const board = await this.boardRepository.findBoardByBoardSeq(boardSeq);
 
     if (board.user.userSeq !== user.userSeq) {
@@ -81,7 +80,6 @@ export class BoardService {
     const { userSeq } = req.user;
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
-
     const board = await this.boardRepository.findBoardByBoardSeq(boardSeq);
 
     if (board.user.userSeq !== user.userSeq) {
@@ -89,5 +87,65 @@ export class BoardService {
     }
 
     await this.boardRepository.update({ boardSeq }, { isDeleted: true });
+  }
+
+  // 게시판 댓글
+  async getBoardCommentList(boardSeq: number) {
+    const [boardComments, total] = await this.boardCommentRepository.findAndCount({
+      where: { board: { boardSeq }, isDeleted: false },
+      order: { createdAt: 'ASC' },
+      relations: ['user'],
+    });
+
+    return { boardComments, total };
+  }
+
+  async createBoardComment(params: { boardSeq: number; dto: CreateBoardCommentDto; req: Request }) {
+    const { boardSeq, dto, req } = params;
+    const { userSeq } = req.user;
+    const { content } = dto;
+
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
+    const board = await this.boardRepository.findBoardByBoardSeq(boardSeq);
+
+    const boardComment = this.boardCommentRepository.create({ content, user, board });
+
+    await this.boardCommentRepository.save(boardComment);
+  }
+
+  async updateBoardComment(params: {
+    boardSeq: number;
+    boardCommentSeq: number;
+    dto: UpdateBoardCommentDto;
+    req: Request;
+  }) {
+    const { boardSeq, boardCommentSeq, dto, req } = params;
+    const { userSeq } = req.user;
+    const { content } = dto;
+
+    await this.boardRepository.findBoardByBoardSeq(boardSeq);
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
+    const boardComment = await this.boardCommentRepository.findBoardCommentByBoardCommentSeq(boardCommentSeq);
+
+    if (boardComment.user.userSeq !== user.userSeq) {
+      throw ResConfig.Fail_400({ message: '댓글 작성자만 수정할 수 있습니다.' });
+    }
+
+    await this.boardCommentRepository.update({ boardCommentSeq }, { content });
+  }
+
+  async deleteBoardComment(params: { boardSeq: number; boardCommentSeq: number; req: Request }) {
+    const { boardSeq, boardCommentSeq, req } = params;
+    const { userSeq } = req.user;
+
+    await this.boardRepository.findBoardByBoardSeq(boardSeq);
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
+    const boardComment = await this.boardCommentRepository.findBoardCommentByBoardCommentSeq(boardCommentSeq);
+
+    if (boardComment.user.userSeq !== user.userSeq) {
+      throw ResConfig.Fail_400({ message: '댓글 작성자만 삭제할 수 있습니다.' });
+    }
+
+    await this.boardCommentRepository.update({ boardCommentSeq }, { isDeleted: true });
   }
 }

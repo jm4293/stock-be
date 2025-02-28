@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, Res } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { Public } from '../../decorator';
-import { CreateBoardDto, UpdateBoardDto } from '../../type/dto';
+import { CreateBoardCommentDto, CreateBoardDto, UpdateBoardCommentDto, UpdateBoardDto } from '../../type/dto';
 import { Request, Response } from 'express';
 import { ResConfig } from '../../config';
 
@@ -9,6 +9,7 @@ import { ResConfig } from '../../config';
 export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
+  // 게시판
   @Public()
   @Get()
   async getBoardList(@Query('page', ParseIntPipe) page: number, @Res() res: Response) {
@@ -47,6 +48,52 @@ export class BoardController {
   @Delete(':boardSeq')
   async deleteBoard(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Req() req: Request, @Res() res: Response) {
     await this.boardService.deleteBoard({ boardSeq, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
+  }
+
+  // 게시판 댓글
+  @Public()
+  @Get(':boardSeq/comment')
+  async getBoardCommentList(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Res() res: Response) {
+    const ret = await this.boardService.getBoardCommentList(boardSeq);
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
+  }
+
+  @Post(':boardSeq/comment')
+  async createBoardComment(
+    @Param('boardSeq', ParseIntPipe) boardSeq: number,
+    @Body() dto: CreateBoardCommentDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    await this.boardService.createBoardComment({ boardSeq, dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'CREATED' });
+  }
+
+  @Put(':boardSeq/comment/:boardCommentSeq')
+  async updateBoardComment(
+    @Param('boardSeq', ParseIntPipe) boardSeq: number,
+    @Param('boardCommentSeq', ParseIntPipe) boardCommentSeq: number,
+    @Body() dto: UpdateBoardCommentDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    await this.boardService.updateBoardComment({ boardSeq, boardCommentSeq, dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
+  }
+
+  @Delete(':boardSeq/comment/:boardCommentSeq')
+  async deleteBoardComment(
+    @Param('boardSeq', ParseIntPipe) boardSeq: number,
+    @Param('boardCommentSeq', ParseIntPipe) boardCommentSeq: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    await this.boardService.deleteBoardComment({ boardSeq, boardCommentSeq, req });
 
     return ResConfig.Success({ res, statusCode: 'OK' });
   }
