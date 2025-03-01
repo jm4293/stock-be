@@ -47,10 +47,10 @@ export class User {
   userAccounts: UserAccount[];
 
   @OneToMany(() => Board, (board) => board.user)
-  board: Board;
+  board: Board[];
 
   @OneToOne(() => BoardComment, (boardComment) => boardComment.user)
-  boardComment: BoardComment;
+  boardComment: BoardComment[];
 
   @OneToOne(() => BoardLike, (boardLike) => boardLike.user)
   boardLike: BoardLike;

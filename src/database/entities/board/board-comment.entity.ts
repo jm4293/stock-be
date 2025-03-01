@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -24,10 +25,10 @@ export class BoardComment {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', default: false })
   isDeleted: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', default: null })
   deletedAt: Date | null;
 
   @ManyToOne(() => User, (user) => user.boardComment)

@@ -3,6 +3,8 @@ import { BoardCommentRepository, BoardRepository, UserRepository } from '../../d
 import { ResConfig } from '../../config';
 import { CreateBoardCommentDto, CreateBoardDto, UpdateBoardCommentDto, UpdateBoardDto } from '../../type/dto';
 import { Request } from 'express';
+import { SelectQueryBuilder } from 'typeorm';
+import { Board } from '../../database/entities';
 
 @Injectable()
 export class BoardService {
@@ -14,15 +16,31 @@ export class BoardService {
 
   // 게시판
   async getBoardList(pageParam: number) {
-    const LIMIT = 1;
+    const LIMIT = 2;
 
-    const [boards, total] = await this.boardRepository.findAndCount({
-      where: { isDeleted: false },
-      order: { createdAt: 'DESC' },
-      skip: (pageParam - 1) * LIMIT,
-      take: LIMIT,
-      relations: ['user'],
-    });
+    // const [boards, total] = await this.boardRepository.findAndCount({
+    //   where: { isDeleted: false },
+    //   order: { createdAt: 'DESC' },
+    //   skip: (pageParam - 1) * LIMIT,
+    //   take: LIMIT,
+    //   relations: ['user'],
+    // });
+
+    const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
+      .createQueryBuilder('board')
+      .leftJoinAndSelect('board.user', 'user')
+      // .leftJoinAndSelect('board.boardComment', 'boardComment', 'boardComment.isDeleted = :isDeleted', {
+      //   isDeleted: false,
+      // })
+      .loadRelationCountAndMap('board.commentTotal', 'board.boardComment', 'boardComment', (qb) =>
+        qb.andWhere('boardComment.isDeleted = :isDeleted', { isDeleted: false }),
+      )
+      .where('board.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('board.createdAt', 'DESC')
+      .skip((pageParam - 1) * LIMIT)
+      .take(LIMIT);
+
+    const [boards, total] = await queryBuilder.getManyAndCount();
 
     const hasNextPage = pageParam * LIMIT < total;
     const nextPage = hasNextPage ? pageParam + 1 : null;
@@ -86,18 +104,27 @@ export class BoardService {
       throw ResConfig.Fail_400({ message: '게시물 작성자만 삭제할 수 있습니다.' });
     }
 
-    await this.boardRepository.update({ boardSeq }, { isDeleted: true });
+    await this.boardRepository.update({ boardSeq }, { isDeleted: true, deletedAt: new Date() });
   }
 
   // 게시판 댓글
-  async getBoardCommentList(boardSeq: number) {
+  async getBoardCommentList(params: { boardSeq: number; pageParam: number }) {
+    const { boardSeq, pageParam } = params;
+
+    const LIMIT = 2;
+
     const [boardComments, total] = await this.boardCommentRepository.findAndCount({
       where: { board: { boardSeq }, isDeleted: false },
       order: { createdAt: 'ASC' },
+      skip: (pageParam - 1) * LIMIT,
+      take: LIMIT,
       relations: ['user'],
     });
 
-    return { boardComments, total };
+    const hasNextPage = pageParam * LIMIT < total;
+    const nextPage = hasNextPage ? pageParam + 1 : null;
+
+    return { boardComments, total, nextPage };
   }
 
   async createBoardComment(params: { boardSeq: number; dto: CreateBoardCommentDto; req: Request }) {
@@ -146,6 +173,6 @@ export class BoardService {
       throw ResConfig.Fail_400({ message: '댓글 작성자만 삭제할 수 있습니다.' });
     }
 
-    await this.boardCommentRepository.update({ boardCommentSeq }, { isDeleted: true });
+    await this.boardCommentRepository.update({ boardCommentSeq }, { isDeleted: true, deletedAt: new Date() });
   }
 }

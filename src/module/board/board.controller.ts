@@ -12,8 +12,8 @@ export class BoardController {
   // 게시판
   @Public()
   @Get()
-  async getBoardList(@Query('page', ParseIntPipe) page: number, @Res() res: Response) {
-    const ret = await this.boardService.getBoardList(page);
+  async getBoardList(@Query('pageParam', ParseIntPipe) pageParam: number, @Res() res: Response) {
+    const ret = await this.boardService.getBoardList(pageParam);
 
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
@@ -55,8 +55,12 @@ export class BoardController {
   // 게시판 댓글
   @Public()
   @Get(':boardSeq/comment')
-  async getBoardCommentList(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Res() res: Response) {
-    const ret = await this.boardService.getBoardCommentList(boardSeq);
+  async getBoardCommentList(
+    @Param('boardSeq', ParseIntPipe) boardSeq: number,
+    @Query('pageParam', ParseIntPipe) pageParam: number,
+    @Res() res: Response,
+  ) {
+    const ret = await this.boardService.getBoardCommentList({ boardSeq, pageParam });
 
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }

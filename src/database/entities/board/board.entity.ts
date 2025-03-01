@@ -44,8 +44,8 @@ export class Board {
   user: User;
 
   @OneToMany(() => BoardComment, (boardComment) => boardComment.board)
-  boardComment: BoardComment;
+  boardComment: BoardComment[];
 
   @OneToMany(() => BoardLike, (boardLike) => boardLike.board)
-  boardLike: BoardLike;
+  boardLike: BoardLike[];
 }
