@@ -33,13 +33,13 @@ export class AuthController {
 
   @Public()
   @Post('login-oauth')
-  loginOauth(@Body() dto: LoginOauthDto, @Req() req: Request, @Res() res: Response) {
-    return this.authService.loginOauth({ dto, req, res });
+  async loginOauth(@Body() dto: LoginOauthDto, @Req() req: Request, @Res() res: Response) {
+    return await this.authService.loginOauth({ dto, req, res });
   }
 
-  @Post('logout-email')
-  async logoutEmail(@Req() req: Request, @Res() res: Response) {
-    return await this.authService.logoutEmail({ req, res });
+  @Post('logout')
+  async logout(@Req() req: Request, @Res() res: Response) {
+    return await this.authService.logout({ req, res });
   }
 
   @Public()

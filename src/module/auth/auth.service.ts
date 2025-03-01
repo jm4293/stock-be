@@ -171,7 +171,7 @@ export class AuthService {
     return;
   }
 
-  async logoutEmail(params: { req: Request; res: Response }) {
+  async logout(params: { req: Request; res: Response }) {
     const { req, res } = params;
     const { userSeq } = req.user;
 
@@ -187,7 +187,7 @@ export class AuthService {
 
     res.clearCookie('refreshToken');
 
-    return res.status(200);
+    return res.status(200).send();
   }
 
   async refreshToken(params: { req: Request; res: Response }) {
