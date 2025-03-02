@@ -10,8 +10,20 @@ export class UserService {
   ) {}
 
   async getMyInfo(req: Request) {
-    const { userSeq, accountType } = req.user;
+    const { userSeq, userAccountType } = req.user;
 
-    return this.userAccountRepository.findUserAccountByUserSeq({ userSeq, accountType });
+    const userAccount = await this.userAccountRepository.findOne({
+      where: { user: { userSeq }, userAccountType },
+      relations: ['user'],
+    });
+
+    if (!userAccount) {
+      throw new Error('사용자 계정이 존재하지 않습니다.');
+    }
+
+    const { email, user } = userAccount;
+    const { nickname, name, thumbnail } = user;
+
+    return { email, nickname, name, thumbnail, userAccountType };
   }
 }
