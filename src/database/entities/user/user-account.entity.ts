@@ -19,7 +19,7 @@ export class UserAccount {
   status: UserAccountStatusEnum;
 
   @Column({ type: 'enum', enum: UserAccountTypeEnum })
-  accountType: UserAccountTypeEnum;
+  userAccountType: UserAccountTypeEnum;
 
   @Column({ type: 'varchar', length: 255 })
   email: string;

@@ -11,21 +11,21 @@ export class UserAccountRepository extends Repository<UserAccount> {
   }
 
   async createUserAccountByEmail(
-    dto: Pick<CreateUserEmailDto, 'email' | 'password'> & { user: User; accountType: UserAccountTypeEnum },
+    dto: Pick<CreateUserEmailDto, 'email' | 'password'> & { user: User; userAccountType: UserAccountTypeEnum },
   ) {
-    const { user, accountType, email, password } = dto;
+    const { user, userAccountType, email, password } = dto;
 
-    const userAccount = this.create({ user, accountType, email, password });
+    const userAccount = this.create({ user, userAccountType, email, password });
 
     return await this.save(userAccount);
   }
 
   async createUserAccountByOauth(
-    dto: Pick<CreateUserEmailDto, 'email'> & { user: User; accountType: UserAccountTypeEnum },
+    dto: Pick<CreateUserEmailDto, 'email'> & { user: User; userAccountType: UserAccountTypeEnum },
   ) {
-    const { user, accountType, email } = dto;
+    const { user, userAccountType, email } = dto;
 
-    const userAccount = this.create({ user, accountType, email });
+    const userAccount = this.create({ user, userAccountType, email });
 
     return await this.save(userAccount);
   }
@@ -38,11 +38,5 @@ export class UserAccountRepository extends Repository<UserAccount> {
     }
 
     return userAccount;
-  }
-
-  async findUserAccountByUserSeq(params: { userSeq: number; accountType?: UserAccountTypeEnum }) {
-    const { userSeq, accountType } = params;
-
-    return await this.findOne({ where: { user: { userSeq }, accountType }, relations: ['user'] });
   }
 }
