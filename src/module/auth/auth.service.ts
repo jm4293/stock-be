@@ -65,10 +65,6 @@ export class AuthService {
 
     const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
 
-    if (!userAccount) {
-      throw ResConfig.Fail_400({ message: '일치하는 사용자가 없습니다.' });
-    }
-
     const isMatch = await BcryptHandler.comparePassword(password, userAccount.password as string);
 
     if (!isMatch) {
@@ -175,11 +171,7 @@ export class AuthService {
     const { req, res } = params;
     const { userSeq } = req.user;
 
-    const user = await this.userRepository.findOne({ where: { userSeq } });
-
-    if (!user) {
-      throw ResConfig.Fail_400({ message: '일치하는 사용자가 없습니다.' });
-    }
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
 
     await this.userAccountRepository.update({ user }, { refreshToken: null });
 

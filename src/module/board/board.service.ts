@@ -16,7 +16,7 @@ export class BoardService {
 
   // 게시판
   async getBoardList(pageParam: number) {
-    const LIMIT = 2;
+    const LIMIT = 5;
 
     // const [boards, total] = await this.boardRepository.findAndCount({
     //   where: { isDeleted: false },
@@ -49,22 +49,15 @@ export class BoardService {
   }
 
   async getBoardDetail(boardSeq: number) {
-    const board = await this.boardRepository.findOne({
-      where: { boardSeq },
-      relations: ['user'],
-    });
-
-    if (!board) {
-      throw ResConfig.Fail_400({ message: '게시물이 존재하지 않습니다.' });
-    }
-
-    await this.boardRepository.increaseBoardViewCount(boardSeq);
+    const board = await this.boardRepository.findBoardByBoardSeq(boardSeq);
 
     const commentList = await this.boardCommentRepository.find({
       where: { board: { boardSeq }, isDeleted: false },
       order: { createdAt: 'ASC' },
       relations: ['user'],
     });
+
+    await this.boardRepository.increaseBoardViewCount(boardSeq);
 
     return { board, commentList };
   }
