@@ -18,6 +18,13 @@ export class BoardController {
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
+  @Get('mine')
+  async getMyBoardList(@Query('pageParam', ParseIntPipe) pageParam: number, @Req() req: Request, @Res() res: Response) {
+    const ret = await this.boardService.getMyBoardList({ pageParam, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
+  }
+
   @Public()
   @Get(':boardSeq')
   async getBoardDetail(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Res() res: Response) {
@@ -61,6 +68,17 @@ export class BoardController {
     @Res() res: Response,
   ) {
     const ret = await this.boardService.getBoardCommentList({ boardSeq, pageParam });
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
+  }
+
+  @Get('comment/mine')
+  async getMyBoardCommentList(
+    @Query('pageParam', ParseIntPipe) pageParam: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const ret = await this.boardService.getMyBoardCommentList({ pageParam, req });
 
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
