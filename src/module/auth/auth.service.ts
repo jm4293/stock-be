@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
@@ -68,7 +68,7 @@ export class AuthService {
     const isMatch = await BcryptHandler.comparePassword(password, userAccount.password as string);
 
     if (!isMatch) {
-      throw new HttpException('비밀번호가 일치하지 않습니다.', 400);
+      throw ResConfig.Fail_400({ message: '비밀번호가 일치하지 않습니다.' });
     }
 
     return await this._login({ req, res, user: userAccount.user, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
@@ -188,7 +188,7 @@ export class AuthService {
     const refreshToken = req.cookies['refreshToken'] as string;
 
     if (!refreshToken) {
-      throw new HttpException('리프레시 토큰이 존재하지 않습니다.', 403);
+      throw ResConfig.Fail_403({ message: '리프레시 토큰이 존재하지 않습니다.' });
     }
 
     const { userSeq, userAccountType } = this.jwtService.verify<IJwtToken>(
@@ -201,11 +201,11 @@ export class AuthService {
     });
 
     if (!savedRefreshToken) {
-      throw new HttpException('DB 리프레시 토큰이 존재하지 않습니다.', 403);
+      throw ResConfig.Fail_403({ message: 'DB 리프레시 토큰이 존재하지 않습니다.' });
     }
 
     if (refreshToken !== savedRefreshToken.refreshToken) {
-      throw new HttpException('리프레시 토큰이 일치하지 않습니다.', 403);
+      throw ResConfig.Fail_403({ message: '리프레시 토큰이 일치하지 않습니다.' });
     }
 
     const accessToken = await this._generateJwtToken({ userSeq, userAccountType, expiresIn: ACCESS_TOKEN_TIME });

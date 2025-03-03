@@ -31,7 +31,7 @@ export class ResConfig<T = unknown> {
     return new UnauthorizedException();
   }
 
-  static Fail_403(params: { status: HttpStatus; message?: string }) {
+  static Fail_403(params: { message?: string }) {
     const { message } = params;
 
     return new ForbiddenException();
