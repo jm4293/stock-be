@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-  Column,
-  OneToOne,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Column } from 'typeorm';
 import { UserAccount } from './user-account.entity';
 import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
 import { Board, BoardComment, BoardLike } from '../board';
@@ -49,9 +41,9 @@ export class User {
   @OneToMany(() => Board, (board) => board.user)
   board: Board[];
 
-  @OneToOne(() => BoardComment, (boardComment) => boardComment.user)
+  @OneToMany(() => BoardComment, (boardComment) => boardComment.user)
   boardComment: BoardComment[];
 
-  @OneToOne(() => BoardLike, (boardLike) => boardLike.user)
+  @OneToMany(() => BoardLike, (boardLike) => boardLike.user)
   boardLike: BoardLike;
 }

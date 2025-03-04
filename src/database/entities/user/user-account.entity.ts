@@ -6,9 +6,11 @@ import {
   ManyToOne,
   JoinColumn,
   Column,
+  OneToOne,
 } from 'typeorm';
 import { User } from './user.entity';
 import { UserAccountStatusEnum, UserAccountTypeEnum } from '../../../constant/enum';
+import { UserPushToken } from './user-push-token.entity';
 
 @Entity()
 export class UserAccount {
@@ -39,4 +41,7 @@ export class UserAccount {
   @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userSeq' })
   user: User;
+
+  @OneToOne(() => UserPushToken, (userPushToken) => userPushToken.userAccount)
+  userPushToken: UserPushToken;
 }
