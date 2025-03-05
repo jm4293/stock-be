@@ -3,14 +3,13 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class NotificationHandler {
-  async sendPushNotification(pushToken: string, message: admin.messaging.Message) {
+  async sendPushNotification(params: { pushToken: string; title: string; message: string }) {
+    const { pushToken, title, message } = params;
+
     try {
       await admin.messaging().send({
         token: pushToken,
-        notification: {
-          title: message.notification?.title,
-          body: message.notification?.body,
-        },
+        notification: { title, body: message },
       });
       console.log('Push notification sent successfully');
     } catch (error) {

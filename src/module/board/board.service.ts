@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { BoardCommentRepository, BoardRepository, UserRepository } from '../../database/repository';
+import {
+  BoardCommentRepository,
+  BoardRepository,
+  UserPushTokenRepository,
+  UserRepository,
+} from '../../database/repository';
 import { ResConfig } from '../../config';
 import { CreateBoardCommentDto, CreateBoardDto, UpdateBoardCommentDto, UpdateBoardDto } from '../../type/dto';
 import { Request } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 import { Board, BoardComment } from '../../database/entities';
+import { NotificationHandler } from '../../handler';
 
 @Injectable()
 export class BoardService {
@@ -12,6 +18,9 @@ export class BoardService {
     private readonly boardRepository: BoardRepository,
     private readonly boardCommentRepository: BoardCommentRepository,
     private readonly userRepository: UserRepository,
+    private readonly userPushTokenRepository: UserPushTokenRepository,
+
+    private readonly notificationHandler: NotificationHandler,
   ) {}
 
   // 게시판
@@ -178,6 +187,16 @@ export class BoardService {
     const boardComment = this.boardCommentRepository.create({ content, user, board });
 
     await this.boardCommentRepository.save(boardComment);
+
+    if (board.user.userSeq !== user.userSeq) {
+      const userPushToken = await this.userPushTokenRepository.getUserPushTokenByUserSeq(board.user.userSeq);
+
+      await this.notificationHandler.sendPushNotification({
+        pushToken: String(userPushToken.pushToken),
+        title: '게시물에 댓글이 달렸습니다.',
+        message: `${user.nickname}님이 ${board.title} 게시물에 댓글을 달았습니다.`,
+      });
+    }
   }
 
   async updateBoardComment(params: {
