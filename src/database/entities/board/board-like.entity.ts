@@ -10,11 +10,11 @@ export class BoardLike {
   @PrimaryColumn()
   userSeq: number;
 
-  @ManyToOne(() => Board, (board) => board.boardLike)
+  @ManyToOne(() => Board, (board) => board.boardLikes)
   @JoinColumn({ name: 'boardSeq' })
   board: Board;
 
-  @ManyToOne(() => User, (user) => user.boardLike)
+  @ManyToOne(() => User, (user) => user.boardLikes)
   @JoinColumn({ name: 'userSeq' })
   user: User;
 }

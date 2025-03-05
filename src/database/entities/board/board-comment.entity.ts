@@ -31,11 +31,11 @@ export class BoardComment {
   @DeleteDateColumn({ type: 'timestamp', default: null })
   deletedAt: Date | null;
 
-  @ManyToOne(() => User, (user) => user.boardComment)
+  @ManyToOne(() => User, (user) => user.boardComments)
   @JoinColumn({ name: 'userSeq' })
   user: User;
 
-  @ManyToOne(() => Board, (board) => board.boardComment)
+  @ManyToOne(() => Board, (board) => board.boardComments)
   @JoinColumn({ name: 'boardSeq' })
   board: Board;
 }

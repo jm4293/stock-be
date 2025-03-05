@@ -1,7 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  Column,
+  DeleteDateColumn,
+} from 'typeorm';
 import { UserAccount } from './user-account.entity';
 import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
 import { Board, BoardComment, BoardLike } from '../board';
+import { UserNotification } from './user-notification.entity';
 
 @Entity()
 export class User {
@@ -35,15 +44,24 @@ export class User {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
+  @DeleteDateColumn({ type: 'timestamp', default: null })
+  deletedAt: Date | null;
+
   @OneToMany(() => UserAccount, (userAccount) => userAccount.user)
   userAccounts: UserAccount[];
 
+  @OneToMany(() => UserNotification, (userNotification) => userNotification.user)
+  userNotifications: UserNotification[];
+
   @OneToMany(() => Board, (board) => board.user)
-  board: Board[];
+  boards: Board[];
 
   @OneToMany(() => BoardComment, (boardComment) => boardComment.user)
-  boardComment: BoardComment[];
+  boardComments: BoardComment[];
 
   @OneToMany(() => BoardLike, (boardLike) => boardLike.user)
-  boardLike: BoardLike;
+  boardLikes: BoardLike[];
 }

@@ -39,13 +39,13 @@ export class Board {
   @DeleteDateColumn({ type: 'timestamp', default: null })
   deletedAt: Date | null;
 
-  @ManyToOne(() => User, (user) => user.board)
+  @ManyToOne(() => User, (user) => user.boards)
   @JoinColumn({ name: 'userSeq' })
   user: User;
 
   @OneToMany(() => BoardComment, (boardComment) => boardComment.board)
-  boardComment: BoardComment[];
+  boardComments: BoardComment[];
 
   @OneToMany(() => BoardLike, (boardLike) => boardLike.board)
-  boardLike: BoardLike[];
+  boardLikes: BoardLike[];
 }

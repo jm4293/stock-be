@@ -7,6 +7,7 @@ import {
   JoinColumn,
   Column,
   OneToOne,
+  DeleteDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { UserAccountStatusEnum, UserAccountTypeEnum } from '../../../constant/enum';
@@ -37,6 +38,12 @@ export class UserAccount {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
+  @DeleteDateColumn({ type: 'timestamp', default: null })
+  deletedAt: Date | null;
 
   @ManyToOne(() => User, (user) => user.userAccounts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userSeq' })
