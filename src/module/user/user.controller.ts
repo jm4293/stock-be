@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request, Response } from 'express';
 import { ResConfig } from '../../config';
-import { CreateUserPushTokenDto } from '../../type/dto';
+import { RegisterUserPushTokenDto } from '../../type/dto';
 
 @Controller('user')
 export class UserController {
@@ -16,7 +16,7 @@ export class UserController {
   }
 
   @Post('push-token')
-  async registerPushToken(@Body() dto: CreateUserPushTokenDto, @Req() req: Request, @Res() res: Response) {
+  async registerPushToken(@Body() dto: RegisterUserPushTokenDto, @Req() req: Request, @Res() res: Response) {
     await this.userService.registerPushToken({ dto, req });
 
     return ResConfig.Success({ res, statusCode: 'OK' });

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserAccountRepository, UserPushTokenRepository, UserRepository } from '../../database/repository';
 import { Request } from 'express';
-import { CreateUserPushTokenDto } from '../../type/dto';
+import { RegisterUserPushTokenDto } from '../../type/dto';
 
 @Injectable()
 export class UserService {
@@ -29,7 +29,7 @@ export class UserService {
     return { email, nickname, name, thumbnail, userAccountType };
   }
 
-  async registerPushToken(params: { dto: CreateUserPushTokenDto; req: Request }) {
+  async registerPushToken(params: { dto: RegisterUserPushTokenDto; req: Request }) {
     const { dto, req } = params;
     const { pushToken, deviceNo } = dto;
     const { userSeq, userAccountType } = req.user;
@@ -42,16 +42,6 @@ export class UserService {
       throw new Error('사용자 계정이 존재하지 않습니다.');
     }
 
-    const userPushToken = await this.userPushTokenRepository.findOne({
-      where: { userAccount },
-    });
-
-    if (userPushToken) {
-      await this.userPushTokenRepository.update({ userAccount }, { pushToken, deviceNo });
-    } else {
-      this.userPushTokenRepository.create({ userAccount, pushToken, deviceNo });
-    }
-
-    return;
+    await this.userPushTokenRepository.upsert({ userAccount, pushToken, deviceNo }, { conflictPaths: ['userAccount'] });
   }
 }

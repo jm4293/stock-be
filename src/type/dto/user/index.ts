@@ -1,1 +1,1 @@
-export * from './create-user-push-token.dto';
+export * from './register-user-push-token.dto';
