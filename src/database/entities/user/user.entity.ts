@@ -11,6 +11,7 @@ import { UserAccount } from './user-account.entity';
 import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
 import { Board, BoardComment, BoardLike } from '../board';
 import { UserNotification } from './user-notification.entity';
+import { UserPushToken } from './user-push-token.entity';
 
 @Entity()
 export class User {
@@ -55,6 +56,9 @@ export class User {
 
   @OneToMany(() => UserNotification, (userNotification) => userNotification.user)
   userNotifications: UserNotification[];
+
+  @OneToMany(() => UserPushToken, (userPushToken) => userPushToken.user)
+  userPushTokens: UserPushToken[];
 
   @OneToMany(() => Board, (board) => board.user)
   boards: Board[];

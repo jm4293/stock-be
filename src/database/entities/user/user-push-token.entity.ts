@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserAccount } from './user-account.entity';
+import { User } from './user.entity';
 
 @Entity()
 export class UserPushToken {
@@ -26,7 +26,7 @@ export class UserPushToken {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @OneToOne(() => UserAccount, (userAccount) => userAccount.userPushToken)
-  @JoinColumn({ name: 'userAccountSeq' })
-  userAccount: UserAccount;
+  @OneToOne(() => User, (user) => user.userPushTokens)
+  @JoinColumn({ name: 'userSeq' })
+  user: User;
 }

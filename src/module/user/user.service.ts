@@ -33,20 +33,14 @@ export class UserService {
     const { dto, req } = params;
     const { pushToken } = dto;
 
-    const { userSeq, userAccountType } = req.user;
+    const { userSeq } = req.user;
     const { 'sec-ch-ua-platform': platform } = req.headers;
 
-    const userAccount = await this.userAccountRepository.findOne({
-      where: { user: { userSeq }, userAccountType },
-    });
-
-    if (!userAccount) {
-      throw new Error('사용자 계정이 존재하지 않습니다.');
-    }
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
 
     await this.userPushTokenRepository.upsert(
-      { userAccount, pushToken, deviceNo: String(platform) },
-      { conflictPaths: ['userAccount'] },
+      { user, pushToken, deviceNo: String(platform) },
+      { conflictPaths: ['user'] },
     );
   }
 }

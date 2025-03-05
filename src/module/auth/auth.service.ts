@@ -175,18 +175,13 @@ export class AuthService {
 
   async logout(params: { req: Request; res: Response }) {
     const { req, res } = params;
-    const { userSeq, userAccountType } = req.user;
+    const { userSeq } = req.user;
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
 
-    const userAccount = await this.userAccountRepository.findUserAccountByUserSeqAndUserAccountType({
-      userSeq,
-      userAccountType,
-    });
-
     await this.userAccountRepository.update({ user }, { refreshToken: null });
 
-    await this.userPushTokenRepository.update({ userAccount }, { pushToken: null });
+    await this.userPushTokenRepository.update({ user }, { pushToken: null });
 
     await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
 
