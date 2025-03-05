@@ -29,8 +29,8 @@ export class BoardService {
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user')
-      .loadRelationCountAndMap('board.commentTotal', 'board.boardComment', 'boardComment', (qb) =>
-        qb.andWhere('boardComment.isDeleted = :isDeleted', { isDeleted: false }),
+      .loadRelationCountAndMap('board.commentTotal', 'board.boardComments', 'boardComments', (qb) =>
+        qb.andWhere('boardComments.isDeleted = :isDeleted', { isDeleted: false }),
       )
       .where('board.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('board.createdAt', 'DESC')
@@ -54,8 +54,8 @@ export class BoardService {
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user')
-      .loadRelationCountAndMap('board.commentTotal', 'board.boardComment', 'boardComment', (qb) =>
-        qb.andWhere('boardComment.isDeleted = :isDeleted', { isDeleted: false }),
+      .loadRelationCountAndMap('board.commentTotal', 'board.boardComments', 'boardComments', (qb) =>
+        qb.andWhere('boardComments.isDeleted = :isDeleted', { isDeleted: false }),
       )
       .where('board.isDeleted = :isDeleted', { isDeleted: false })
       .andWhere('user.userSeq = :userSeq', { userSeq })
