@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { UserAccountRepository, UserRepository, UserVisitRepository } from '../../database/repository';
+import {
+  UserAccountRepository,
+  UserPushTokenRepository,
+  UserRepository,
+  UserVisitRepository,
+} from '../../database/repository';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
 import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
@@ -19,6 +24,7 @@ export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly userAccountRepository: UserAccountRepository,
+    private readonly userPushTokenRepository: UserPushTokenRepository,
     private readonly userVisitRepository: UserVisitRepository,
 
     private readonly jwtService: JwtService,
@@ -169,11 +175,18 @@ export class AuthService {
 
   async logout(params: { req: Request; res: Response }) {
     const { req, res } = params;
-    const { userSeq } = req.user;
+    const { userSeq, userAccountType } = req.user;
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
 
+    const userAccount = await this.userAccountRepository.findUserAccountByUserSeqAndUserAccountType({
+      userSeq,
+      userAccountType,
+    });
+
     await this.userAccountRepository.update({ user }, { refreshToken: null });
+
+    await this.userPushTokenRepository.update({ userAccount }, { pushToken: null });
 
     await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
 

@@ -5,8 +5,4 @@ export class RegisterUserPushTokenDto {
   @Transform(({ value }) => value.trim())
   @IsString()
   pushToken: string;
-
-  @Transform(({ value }) => value.trim())
-  @IsString()
-  deviceNo: string;
 }

@@ -14,8 +14,8 @@ export class UserPushToken {
   @PrimaryGeneratedColumn()
   userPushTokenSeq: number;
 
-  @Column({ type: 'varchar', length: 500 })
-  pushToken: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  pushToken: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   deviceNo: string;

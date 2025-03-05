@@ -39,4 +39,16 @@ export class UserAccountRepository extends Repository<UserAccount> {
 
     return userAccount;
   }
+
+  async findUserAccountByUserSeqAndUserAccountType(params: { userSeq: number; userAccountType: UserAccountTypeEnum }) {
+    const { userSeq, userAccountType } = params;
+
+    const userAccount = await this.findOne({ where: { user: { userSeq }, userAccountType }, relations: ['user'] });
+
+    if (!userAccount) {
+      throw new Error('사용자 계정이 존재하지 않습니다.');
+    }
+
+    return userAccount;
+  }
 }
