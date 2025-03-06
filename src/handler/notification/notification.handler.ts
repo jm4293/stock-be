@@ -16,8 +16,9 @@ export class NotificationHandler {
     pushToken: string;
     message: string;
     userNotificationType: UserNotificationTypeEnum;
+    userSeq: number;
   }) {
-    const { pushToken, message, userNotificationType } = params;
+    const { pushToken, message, userNotificationType, userSeq } = params;
 
     try {
       await admin.messaging().send({ token: pushToken, notification: { title: 'PEEK 알림', body: message } });
@@ -25,6 +26,7 @@ export class NotificationHandler {
       const userNotification = this.userNotificationRepository.create({
         userNotificationType,
         message,
+        user: { userSeq },
       });
 
       await this.userNotificationRepository.save(userNotification);

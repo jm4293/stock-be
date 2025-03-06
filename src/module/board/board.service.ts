@@ -198,6 +198,7 @@ export class BoardService {
         pushToken: String(userPushToken.pushToken),
         message: `${user.nickname}님이 ${board.title} 게시물에 댓글을 달았습니다.`,
         userNotificationType: UserNotificationTypeEnum.BOARD_COMMENT,
+        userSeq: board.user.userSeq,
       });
     }
   }
