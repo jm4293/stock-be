@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, ParseIntPipe, Post, Query, Req, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request, Response } from 'express';
 import { ResConfig } from '../../config';
@@ -22,9 +22,13 @@ export class UserController {
     return ResConfig.Success({ res, statusCode: 'OK' });
   }
 
-  @Get('notification')
-  async getNotification(@Req() req: Request, @Res() res: Response) {
-    const ret = await this.userService.getNotification(req);
+  @Get('notifications')
+  async getNotificationList(
+    @Query('pageParam', ParseIntPipe) pageParam: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const ret = await this.userService.getNotificationList({ pageParam, req });
 
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }

@@ -50,15 +50,25 @@ export class UserService {
     );
   }
 
-  async getNotification(req: Request) {
+  async getNotificationList(params: { pageParam: number; req: Request }) {
+    const { pageParam, req } = params;
     const { userSeq } = req.user;
 
-    const user = await this.userRepository.findUserByUserSeq(userSeq);
+    const LIMIT = 5;
 
-    return await this.userNotificationRepository.find({
-      where: { user },
-      order: { createdAt: 'DESC' },
-    });
+    const queryBuilder = this.userNotificationRepository
+      .createQueryBuilder('userNotification')
+      .leftJoinAndSelect('userNotification.user', 'user')
+      .where('userNotification.user = :userSeq', { userSeq })
+      .andWhere('userNotification.isDeleted = false')
+      .orderBy('userNotification.createdAt', 'DESC');
+
+    const [notifications, total] = await queryBuilder.getManyAndCount();
+
+    const hasNextPage = pageParam * LIMIT < total;
+    const nextPage = hasNextPage ? pageParam + 1 : null;
+
+    return { notifications, total, nextPage };
   }
 
   async readNotification(params: { dto: ReadUserNotificationDto; req: Request }) {
