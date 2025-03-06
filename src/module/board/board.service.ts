@@ -11,6 +11,7 @@ import { Request } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 import { Board, BoardComment } from '../../database/entities';
 import { NotificationHandler } from '../../handler';
+import { UserNotificationTypeEnum } from '../../constant/enum';
 
 @Injectable()
 export class BoardService {
@@ -195,8 +196,8 @@ export class BoardService {
 
       await this.notificationHandler.sendPushNotification({
         pushToken: String(userPushToken.pushToken),
-        title: '게시물에 댓글이 달렸습니다.',
         message: `${user.nickname}님이 ${board.title} 게시물에 댓글을 달았습니다.`,
+        userNotificationType: UserNotificationTypeEnum.BOARD_COMMENT,
       });
     }
   }
