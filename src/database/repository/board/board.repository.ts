@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Board } from '../../entities';
 import { EntityManager, Repository } from 'typeorm';
+import { ResConfig } from '../../../config';
 
 @Injectable()
 export class BoardRepository extends Repository<Board> {
@@ -12,7 +13,7 @@ export class BoardRepository extends Repository<Board> {
     const board = await this.findOne({ where: { boardSeq }, relations: ['user'] });
 
     if (!board) {
-      throw new Error('게시물이 존재하지 않습니다.');
+      throw ResConfig.Fail_400({ message: '게시물이 존재하지 않습니다.' });
     }
 
     return board;

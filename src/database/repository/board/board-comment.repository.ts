@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager, Repository } from 'typeorm';
 import { BoardComment } from '../../entities';
+import { ResConfig } from '../../../config';
 
 @Injectable()
 export class BoardCommentRepository extends Repository<BoardComment> {
@@ -12,7 +13,7 @@ export class BoardCommentRepository extends Repository<BoardComment> {
     const boardComment = await this.findOne({ where: { boardCommentSeq }, relations: ['user'] });
 
     if (!boardComment) {
-      throw new Error('댓글이 존재하지 않습니다.');
+      throw ResConfig.Fail_400({ message: '댓글이 존재하지 않습니다.' });
     }
 
     return boardComment;

@@ -3,6 +3,7 @@ import { User, UserAccount } from '../../entities';
 import { EntityManager, Repository } from 'typeorm';
 import { UserAccountTypeEnum } from '../../../constant/enum';
 import { CreateUserEmailDto } from '../../../type/dto';
+import { ResConfig } from '../../../config';
 
 @Injectable()
 export class UserAccountRepository extends Repository<UserAccount> {
@@ -34,19 +35,7 @@ export class UserAccountRepository extends Repository<UserAccount> {
     const userAccount = await this.findOne({ where: { email }, relations: ['user'] });
 
     if (!userAccount) {
-      throw new Error('사용자 계정이 존재하지 않습니다.');
-    }
-
-    return userAccount;
-  }
-
-  async findUserAccountByUserSeqAndUserAccountType(params: { userSeq: number; userAccountType: UserAccountTypeEnum }) {
-    const { userSeq, userAccountType } = params;
-
-    const userAccount = await this.findOne({ where: { user: { userSeq }, userAccountType }, relations: ['user'] });
-
-    if (!userAccount) {
-      throw new Error('사용자 계정이 존재하지 않습니다.');
+      throw ResConfig.Fail_400({ message: '사용자 계정이 존재하지 않습니다.' });
     }
 
     return userAccount;

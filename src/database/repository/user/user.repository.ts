@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager, Repository } from 'typeorm';
 import { User } from '../../entities';
 import { CreateUserEmailDto } from '../../../type/dto';
+import { ResConfig } from '../../../config';
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -21,7 +22,7 @@ export class UserRepository extends Repository<User> {
     const user = await this.findOne({ where: { userSeq } });
 
     if (!user) {
-      throw new Error('사용자 정보가 존재하지 않습니다.');
+      throw ResConfig.Fail_400({ message: '사용자 정보가 존재하지 않습니다.' });
     }
 
     return user;
