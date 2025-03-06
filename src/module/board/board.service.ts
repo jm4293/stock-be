@@ -136,6 +136,8 @@ export class BoardService {
   async getBoardCommentList(params: { boardSeq: number; pageParam: number }) {
     const { boardSeq, pageParam } = params;
 
+    await this.boardRepository.findBoardByBoardSeq(boardSeq);
+
     const LIMIT = 2;
 
     const [boardComments, total] = await this.boardCommentRepository.findAndCount({
