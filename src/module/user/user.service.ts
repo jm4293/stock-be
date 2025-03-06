@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UserAccountRepository, UserPushTokenRepository, UserRepository } from '../../database/repository';
+import {
+  UserAccountRepository,
+  UserNotificationRepository,
+  UserPushTokenRepository,
+  UserRepository,
+} from '../../database/repository';
 import { Request } from 'express';
-import { RegisterUserPushTokenDto } from '../../type/dto';
+import { ReadUserNotificationDto, RegisterUserPushTokenDto } from '../../type/dto';
 
 @Injectable()
 export class UserService {
@@ -9,6 +14,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly userAccountRepository: UserAccountRepository,
     private readonly userPushTokenRepository: UserPushTokenRepository,
+    private readonly userNotificationRepository: UserNotificationRepository,
   ) {}
 
   async getMyInfo(req: Request) {
@@ -42,5 +48,38 @@ export class UserService {
       { user, pushToken, deviceNo: String(platform) },
       { conflictPaths: ['user'] },
     );
+  }
+
+  async getNotification(req: Request) {
+    const { userSeq } = req.user;
+
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
+
+    return await this.userNotificationRepository.find({
+      where: { user },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async readNotification(params: { dto: ReadUserNotificationDto; req: Request }) {
+    const { dto, req } = params;
+
+    const { userNotificationSeq } = dto;
+    const { userSeq } = req.user;
+
+    await this.userRepository.findUserByUserSeq(userSeq);
+
+    await this.userNotificationRepository.readNotification({ userSeq, userNotificationSeq });
+  }
+
+  async deleteNotification(params: { dto: ReadUserNotificationDto; req: Request }) {
+    const { dto, req } = params;
+
+    const { userNotificationSeq } = dto;
+    const { userSeq } = req.user;
+
+    await this.userRepository.findUserByUserSeq(userSeq);
+
+    await this.userNotificationRepository.update({ userNotificationSeq }, { isDeleted: true, deletedAt: new Date() });
   }
 }
