@@ -7,7 +7,7 @@ import {
 } from '../../database/repository';
 import { BcryptHandler } from '../../handler';
 import { User, UserAccount } from 'src/database/entities';
-import { UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
+import { userAccountTypeDescription, UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
@@ -37,7 +37,7 @@ export class AuthService {
 
     let user: User;
 
-    const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
+    const userAccount = await this.userAccountRepository.findOne({ where: { email }, relations: ['user'] });
 
     if (userAccount) {
       user = userAccount.user;
@@ -60,7 +60,27 @@ export class AuthService {
   async checkEmail(dto: CheckEmailDto): Promise<IPostCheckEmailRes> {
     const { email } = dto;
 
-    const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
+    const userAccount = await this.userAccountRepository.findOne({
+      where: { email },
+      relations: ['user'],
+    });
+
+    if (userAccount) {
+      const { email, userAccountType } = userAccount;
+
+      switch (userAccountType) {
+        case UserAccountTypeEnum.EMAIL:
+          throw ResConfig.Fail_400({
+            message: `이메일: ${email}은 ${userAccountTypeDescription[userAccountType]} 가입 회원입니다.`,
+          });
+        case UserAccountTypeEnum.GOOGLE:
+          throw ResConfig.Fail_400({
+            message: `이메일: ${email}은 ${userAccountTypeDescription[userAccountType]} 간편로그인 회원입니다.`,
+          });
+        default:
+          break;
+      }
+    }
 
     return { isExist: !!userAccount, email };
   }
