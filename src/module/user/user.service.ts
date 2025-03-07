@@ -7,6 +7,7 @@ import {
 } from '../../database/repository';
 import { Request } from 'express';
 import { ReadUserNotificationDto, RegisterUserPushTokenDto } from '../../type/dto';
+import { ResConfig } from '../../config';
 
 @Injectable()
 export class UserService {
@@ -61,7 +62,9 @@ export class UserService {
       .leftJoinAndSelect('userNotification.user', 'user')
       .where('userNotification.user = :userSeq', { userSeq })
       .andWhere('userNotification.isDeleted = false')
-      .orderBy('userNotification.createdAt', 'DESC');
+      .orderBy('userNotification.createdAt', 'DESC')
+      .skip((pageParam - 1) * LIMIT)
+      .take(LIMIT);
 
     const [notifications, total] = await queryBuilder.getManyAndCount();
 
@@ -79,13 +82,29 @@ export class UserService {
 
     await this.userRepository.findUserByUserSeq(userSeq);
 
-    await this.userNotificationRepository.readNotification({ userSeq, userNotificationSeq });
+    const notification = await this.userNotificationRepository.findOne({
+      where: { user: { userSeq }, userNotificationSeq },
+    });
+
+    if (!notification) {
+      throw ResConfig.Fail_400({ message: '알림이 존재하지 않습니다.' });
+    }
+
+    notification.isRead = true;
+
+    await this.userNotificationRepository.save(notification);
   }
 
-  async deleteNotification(params: { dto: ReadUserNotificationDto; req: Request }) {
-    const { dto, req } = params;
+  async readAllNotification(req: Request) {
+    const { userSeq } = req.user;
 
-    const { userNotificationSeq } = dto;
+    await this.userRepository.findUserByUserSeq(userSeq);
+
+    await this.userNotificationRepository.update({ user: { userSeq }, isRead: false }, { isRead: true });
+  }
+
+  async deleteNotification(params: { userNotificationSeq: number; req: Request }) {
+    const { userNotificationSeq, req } = params;
     const { userSeq } = req.user;
 
     await this.userRepository.findUserByUserSeq(userSeq);

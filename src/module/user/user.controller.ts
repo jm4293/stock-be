@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, ParseIntPipe, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, Req, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request, Response } from 'express';
 import { ResConfig } from '../../config';
@@ -40,9 +40,20 @@ export class UserController {
     return ResConfig.Success({ res, statusCode: 'OK' });
   }
 
-  @Delete('notification')
-  async deleteNotification(@Body() dto: ReadUserNotificationDto, @Req() req: Request, @Res() res: Response) {
-    await this.userService.deleteNotification({ dto, req });
+  @Post('notification/read-all')
+  async readAllNotification(@Req() req: Request, @Res() res: Response) {
+    await this.userService.readAllNotification(req);
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
+  }
+
+  @Delete('notification/:userNotificationSeq')
+  async deleteNotification(
+    @Param('userNotificationSeq', ParseIntPipe) userNotificationSeq: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    await this.userService.deleteNotification({ userNotificationSeq, req });
 
     return ResConfig.Success({ res, statusCode: 'OK' });
   }
