@@ -122,7 +122,10 @@ export class AuthService {
 
         const { email, name, picture } = await firstValueFrom<IGetOauthGoogleTokenRes>(token);
 
-        const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
+        const userAccount = await this.userAccountRepository.findOne({
+          where: { email, userAccountType: UserAccountTypeEnum.GOOGLE },
+          relations: ['user'],
+        });
 
         if (userAccount) {
           await this.userRepository.update(
@@ -213,7 +216,7 @@ export class AuthService {
       }
     }
 
-    return res.status(200).send();
+    return res.status(200).send({ message: '로그아웃 되었습니다.' });
   }
 
   async refreshToken(params: { req: Request; res: Response }) {
