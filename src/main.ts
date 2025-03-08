@@ -5,15 +5,29 @@ import { validationPipeConfig } from './config';
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as fs from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // const httpsOptions = {
+  //   key: fs.readFileSync('certs/key.pem'),
+  //   cert: fs.readFileSync('certs/cert.pem'),
+  // };
+
+  const app = await NestFactory.create(
+    AppModule,
+    // { httpsOptions }
+  );
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: ['http://localhost:31180', 'http://8134293.iptime.org:9900'],
+    origin: [
+      'http://localhost:31180',
+      'http://localhost:9900',
+      'http://8134293.iptime.org:9900',
+      'https://8134293.iptime.org:9900',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

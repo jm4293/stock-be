@@ -45,10 +45,16 @@ export class UserService {
 
     const user = await this.userRepository.findUserByUserSeq(userSeq);
 
-    await this.userPushTokenRepository.upsert(
-      { user, pushToken, deviceNo: String(platform) },
-      { conflictPaths: ['user'] },
-    );
+    const userPushToken = await this.userPushTokenRepository.findOne({ where: { user: { userSeq } } });
+
+    if (userPushToken) {
+      userPushToken.pushToken = pushToken;
+      userPushToken.deviceNo = String(platform);
+
+      await this.userPushTokenRepository.save(userPushToken);
+    } else {
+      await this.userPushTokenRepository.save({ user, pushToken, deviceNo: String(platform) });
+    }
   }
 
   async getNotificationList(params: { pageParam: number; req: Request }) {

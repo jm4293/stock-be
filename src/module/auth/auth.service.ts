@@ -205,7 +205,13 @@ export class AuthService {
 
     await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
 
-    res.clearCookie('refreshToken');
+    const cookies = req.cookies;
+
+    for (const cookie in cookies) {
+      if (cookies.hasOwnProperty(cookie)) {
+        res.clearCookie(cookie);
+      }
+    }
 
     return res.status(200).send();
   }
@@ -213,7 +219,7 @@ export class AuthService {
   async refreshToken(params: { req: Request; res: Response }) {
     const { req, res } = params;
 
-    const refreshToken = req.cookies['refreshToken'] as string;
+    const refreshToken = req.cookies['RT'] as string;
 
     if (!refreshToken) {
       throw ResConfig.Fail_403({ message: '리프레시 토큰이 존재하지 않습니다.' });
@@ -271,7 +277,7 @@ export class AuthService {
       expiresIn: REFRESH_TOKEN_TIME,
     });
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('RT', refreshToken, {
       httpOnly: true,
       sameSite: 'strict',
       maxAge: REFRESH_TOKEN_COOKIE_TIME,
