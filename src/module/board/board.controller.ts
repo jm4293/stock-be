@@ -12,8 +12,8 @@ export class BoardController {
   // 게시판
   @Public()
   @Get()
-  async getBoardList(@Query('pageParam', ParseIntPipe) pageParam: number, @Res() res: Response) {
-    const ret = await this.boardService.getBoardList(pageParam);
+  async getBoardList(@Query('pageParam', ParseIntPipe) pageParam: number, @Req() req: Request, @Res() res: Response) {
+    const ret = await this.boardService.getBoardList({ pageParam, req });
 
     return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
@@ -116,6 +116,14 @@ export class BoardController {
     @Res() res: Response,
   ) {
     await this.boardService.deleteBoardComment({ boardSeq, boardCommentSeq, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK' });
+  }
+
+  // 게시판 좋아요(찜)
+  @Post(':boardSeq/like')
+  async createBoardLike(@Param('boardSeq', ParseIntPipe) boardSeq: number, @Req() req: Request, @Res() res: Response) {
+    await this.boardService.boardLike({ boardSeq, req });
 
     return ResConfig.Success({ res, statusCode: 'OK' });
   }

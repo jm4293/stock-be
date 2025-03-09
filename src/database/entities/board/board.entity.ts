@@ -48,4 +48,7 @@ export class Board {
 
   @OneToMany(() => BoardLike, (boardLike) => boardLike.board)
   boardLikes: BoardLike[];
+
+  // 게시판 좋아요 여부
+  isLiked?: boolean;
 }

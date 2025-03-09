@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   BoardCommentRepository,
+  BoardLikeRepository,
   BoardRepository,
   UserPushTokenRepository,
   UserRepository,
@@ -18,6 +19,7 @@ export class BoardService {
   constructor(
     private readonly boardRepository: BoardRepository,
     private readonly boardCommentRepository: BoardCommentRepository,
+    private readonly boardLikeRepository: BoardLikeRepository,
     private readonly userRepository: UserRepository,
     private readonly userPushTokenRepository: UserPushTokenRepository,
 
@@ -25,7 +27,10 @@ export class BoardService {
   ) {}
 
   // 게시판
-  async getBoardList(pageParam: number) {
+  async getBoardList(params: { pageParam: number; req: Request }) {
+    const { pageParam, req } = params;
+    const userSeq = req.user ? req.user.userSeq : null;
+
     const LIMIT = 5;
 
     // const [boards, total] = await this.boardRepository.findAndCount({
@@ -39,7 +44,8 @@ export class BoardService {
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user')
-      .loadRelationCountAndMap('board.commentTotal', 'board.boardComments', 'boardComments', (qb) =>
+      .loadRelationCountAndMap('board.likeCount', 'board.boardLikes')
+      .loadRelationCountAndMap('board.commentCount', 'board.boardComments', 'boardComments', (qb) =>
         qb.andWhere('boardComments.isDeleted = :isDeleted', { isDeleted: false }),
       )
       .where('board.isDeleted = :isDeleted', { isDeleted: false })
@@ -48,6 +54,17 @@ export class BoardService {
       .take(LIMIT);
 
     const [boards, total] = await queryBuilder.getManyAndCount();
+
+    if (userSeq) {
+      for (const board of boards) {
+        const boardLike = await this.boardLikeRepository.findOne({
+          where: { boardSeq: board.boardSeq, userSeq },
+        });
+        board.isLiked = !!boardLike;
+      }
+    } else {
+      boards.forEach((board) => (board.isLiked = false));
+    }
 
     const hasNextPage = pageParam * LIMIT < total;
     const nextPage = hasNextPage ? pageParam + 1 : null;
@@ -237,5 +254,26 @@ export class BoardService {
     }
 
     await this.boardCommentRepository.update({ boardCommentSeq }, { isDeleted: true, deletedAt: new Date() });
+  }
+
+  // 게시판 좋아요(찜)
+  async boardLike(params: { boardSeq: number; req: Request }) {
+    const { boardSeq, req } = params;
+    const { userSeq } = req.user;
+
+    const user = await this.userRepository.findUserByUserSeq(userSeq);
+    const board = await this.boardRepository.findBoardByBoardSeq(boardSeq);
+
+    const boardLike = await this.boardLikeRepository.findOne({
+      where: { boardSeq: board.boardSeq, userSeq: user.userSeq },
+    });
+
+    if (boardLike) {
+      await this.boardLikeRepository.delete({ board, user });
+    } else {
+      const newBoardLike = this.boardLikeRepository.create({ board, user });
+
+      await this.boardLikeRepository.save(newBoardLike);
+    }
   }
 }
