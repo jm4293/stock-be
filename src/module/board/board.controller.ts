@@ -61,7 +61,7 @@ export class BoardController {
 
   // 게시판 댓글
   @Public()
-  @Get(':boardSeq/comment')
+  @Get(':boardSeq/comments')
   async getBoardCommentList(
     @Param('boardSeq', ParseIntPipe) boardSeq: number,
     @Query('pageParam', ParseIntPipe) pageParam: number,

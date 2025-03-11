@@ -1,2 +1,8 @@
-export * from './base-board';
-export * from './base-board-comment';
+export interface IBaseBoard {
+  title: string;
+  content: string;
+}
+
+export interface IBaseBoardComment {
+  content: string;
+}

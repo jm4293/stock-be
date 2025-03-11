@@ -1,4 +1,19 @@
-export * from './get-oauth-google-token.res';
-export * from './post-check-email.res';
-export * from './post-create-user-email.res';
-export * from './post-login-email.res';
+export interface IPostLoginEmailRes {
+  email: string;
+  accessToken: string;
+}
+
+export interface IGetOauthGoogleTokenRes {
+  email: string;
+  name: string;
+  picture: string;
+}
+
+export interface IPostCheckEmailRes {
+  email: string;
+  isExist: boolean;
+}
+
+export interface IPostCreateUserEmailRes {
+  email: string;
+}
