@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule, BoardModule, KisModule, UserModule } from './module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
+import { HomeModule } from './module/home';
 
 /**
  * imports: 다른 모듈을 가져오기
@@ -16,9 +17,10 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [
     ConfigModule.forRoot(configModuleConfig),
     TypeOrmModule.forRootAsync(typeormModuleConfig),
-    AuthModule,
-    BoardModule,
+    HomeModule,
     KisModule,
+    BoardModule,
+    AuthModule,
     UserModule,
   ],
   controllers: [],
