@@ -106,21 +106,31 @@ export class AuthService {
 
     switch (userAccountType) {
       case UserAccountTypeEnum.GOOGLE: {
-        const token = this.httpService
-          .get<IGetOauthGoogleTokenRes>(`${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`)
-          .pipe(
-            map((response) => {
-              const { email, name, picture } = response.data;
+        const googleToken = await firstValueFrom(
+          this.httpService.get<IGetOauthGoogleTokenRes>(
+            `${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`,
+          ),
+        );
 
-              return { email, name, picture };
-            }),
-            catchError((error) => {
-              console.error('Error occurred while fetching OAuth token:', error);
-              throw new Error('Failed to fetch OAuth token');
-            }),
-          );
+        const { email, name, picture } = googleToken.data;
 
-        const { email, name, picture } = await firstValueFrom<IGetOauthGoogleTokenRes>(token);
+        const imageResponse = await firstValueFrom(this.httpService.get(picture, { responseType: 'arraybuffer' }));
+
+        const blob = new Blob([imageResponse.data], { type: 'image/jpeg' });
+
+        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+
+        const formData = new FormData();
+
+        formData.append('image', file);
+
+        const resizingPicture = await firstValueFrom(
+          this.httpService.post(
+            `${this.configService.get('IMAGE_RESIZING_URL')}:${this.configService.get('IMAGE_RESIZING_PORT')}/${this.configService.get('IMAGE_RESIZING_PREFIX')}`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } },
+          ),
+        );
 
         const userAccount = await this.userAccountRepository.findOne({
           where: { email, userAccountType: UserAccountTypeEnum.GOOGLE },
@@ -130,7 +140,7 @@ export class AuthService {
         if (userAccount) {
           await this.userRepository.update(
             { userSeq: userAccount.user.userSeq },
-            { nickname: name, name, thumbnail: picture },
+            { nickname: name, name, thumbnail: resizingPicture.data.resizedImageUrl },
           );
 
           const userAccountGoogle = await this.userAccountRepository.findOne({
@@ -167,7 +177,7 @@ export class AuthService {
             name,
             policy: true,
             birthdate: undefined,
-            thumbnail: picture,
+            thumbnail: resizingPicture.data.resizedImageUrl,
           });
 
           const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
