@@ -3,14 +3,12 @@ import { KisController } from './kis.controller';
 import { KisService } from './kis.service';
 import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
-import { KisToken } from '../../database/entities';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { KisTokenRepository } from '../../database/repository';
+import { KisTokenIssueRepository, KisTokenRepository, UserRepository } from '../../database/repository';
 
 @Module({
-  imports: [HttpModule, TypeOrmModule.forFeature([KisToken]), ScheduleModule.forRoot()],
+  imports: [HttpModule, ScheduleModule.forRoot()],
   controllers: [KisController],
-  providers: [KisService, KisTokenRepository],
+  providers: [KisService, KisTokenRepository, KisTokenIssueRepository, UserRepository],
   exports: [],
 })
 export class KisModule {}

@@ -12,6 +12,7 @@ import { UserStatusEnum, UserTypeEnum } from '../../../constant/enum';
 import { Board, BoardComment, BoardLike } from '../board';
 import { UserNotification } from './user-notification.entity';
 import { UserPushToken } from './user-push-token.entity';
+import { KisTokenIssue } from '../kis';
 
 @Entity()
 export class User {
@@ -57,9 +58,6 @@ export class User {
   @OneToMany(() => UserNotification, (userNotification) => userNotification.user)
   userNotifications: UserNotification[];
 
-  @OneToMany(() => UserPushToken, (userPushToken) => userPushToken.user)
-  userPushTokens: UserPushToken[];
-
   @OneToMany(() => Board, (board) => board.user)
   boards: Board[];
 
@@ -68,4 +66,10 @@ export class User {
 
   @OneToMany(() => BoardLike, (boardLike) => boardLike.user)
   boardLikes: BoardLike[];
+
+  @OneToMany(() => UserPushToken, (userPushToken) => userPushToken.user)
+  userPushTokens: UserPushToken[];
+
+  @OneToMany(() => KisTokenIssue, (kisTokenIssue) => kisTokenIssue.user)
+  kisTokenIssues: KisTokenIssue[];
 }

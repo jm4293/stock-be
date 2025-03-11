@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { KisTokenIssue } from './kis-token-issue.entity';
 
 @Entity()
 export class KisToken {
@@ -22,4 +23,7 @@ export class KisToken {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @OneToMany(() => KisTokenIssue, (kisTokenIssue) => kisTokenIssue.kisToken)
+  tokeniseIssues: KisTokenIssue[];
 }
