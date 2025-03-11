@@ -301,6 +301,8 @@ export class AuthService {
     const { headers, ip = null } = req;
     const { 'user-agent': userAgent = null, referer = null } = headers;
 
-    await this.userVisitRepository.createUserVisit({ type, ip, userAgent, referer, user });
+    const userVisit = this.userVisitRepository.create({ user, type, ip, userAgent, referer });
+
+    return await this.userVisitRepository.save(userVisit);
   }
 }
