@@ -12,7 +12,6 @@ export class HomeService {
 
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
-      .leftJoinAndSelect('board.user', 'user')
       .loadRelationCountAndMap('board.likeCount', 'board.boardLikes')
       .loadRelationCountAndMap('board.commentCount', 'board.boardComments', 'boardComments', (qb) =>
         qb.andWhere('boardComments.isDeleted = :isDeleted', { isDeleted: false }),
@@ -21,7 +20,9 @@ export class HomeService {
       .leftJoin('board.boardLikes', 'joinedBoardLike')
       .addSelect('COUNT(joinedBoardLike.boardSeq)', 'likeCount')
       .groupBy('board.boardSeq')
+      .having('COUNT(joinedBoardLike.boardSeq) > 0')
       .orderBy('likeCount', 'DESC')
+      .addOrderBy('board.createdAt', 'DESC')
       .take(LIMIT);
 
     const boards = await queryBuilder.getMany();
