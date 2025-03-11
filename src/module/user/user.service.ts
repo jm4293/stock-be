@@ -19,6 +19,10 @@ export class UserService {
   ) {}
 
   async getMyInfo(req: Request) {
+    if (!req.user) {
+      throw ResConfig.Fail_400({});
+    }
+
     const { userSeq, userAccountType } = req.user;
 
     const userAccount = await this.userAccountRepository.findOne({

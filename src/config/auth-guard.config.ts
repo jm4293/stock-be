@@ -15,22 +15,21 @@ export class AuthGuardConfig implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.get<boolean>('isPublic', context.getHandler());
 
-    if (isPublic) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest();
-
     const token = this._extractTokenFromHeader(request);
 
-    if (!token) {
+    if (token) {
+      try {
+        request['user'] = this.jwtService.verify<IJwtToken>(token, {
+          secret: this.configService.get('JWT_SECRET_KEY'),
+        });
+      } catch (e) {
+        if (!isPublic) {
+          throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+        }
+      }
+    } else if (!isPublic) {
       throw new UnauthorizedException('토큰이 존재하지 않습니다.');
-    }
-
-    try {
-      request['user'] = this.jwtService.verify<IJwtToken>(token, { secret: this.configService.get('JWT_SECRET_KEY') });
-    } catch (e) {
-      return false;
     }
 
     return true;
