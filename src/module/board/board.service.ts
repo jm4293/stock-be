@@ -33,14 +33,6 @@ export class BoardService {
 
     const LIMIT = 5;
 
-    // const [boards, total] = await this.boardRepository.findAndCount({
-    //   where: { isDeleted: false },
-    //   order: { createdAt: 'DESC' },
-    //   skip: (pageParam - 1) * LIMIT,
-    //   take: LIMIT,
-    //   relations: ['user'],
-    // });
-
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user')
@@ -81,7 +73,7 @@ export class BoardService {
     const queryBuilder: SelectQueryBuilder<Board> = this.boardRepository
       .createQueryBuilder('board')
       .leftJoinAndSelect('board.user', 'user')
-      .loadRelationCountAndMap('board.commentTotal', 'board.boardComments', 'boardComments', (qb) =>
+      .loadRelationCountAndMap('board.commentCount', 'board.boardComments', 'boardComments', (qb) =>
         qb.andWhere('boardComments.isDeleted = :isDeleted', { isDeleted: false }),
       )
       .where('board.isDeleted = :isDeleted', { isDeleted: false })
