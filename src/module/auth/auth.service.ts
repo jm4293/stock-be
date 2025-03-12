@@ -14,10 +14,11 @@ import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from
 import { ConfigService } from '@nestjs/config';
 import { ResConfig } from '../../config';
 import { HttpService } from '@nestjs/axios';
-import { catchError, firstValueFrom, map } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CheckEmailDto, CreateUserEmailDto, LoginEmailDto, LoginOauthDto } from '../../type/dto';
 import { IGetOauthGoogleTokenRes, IPostCheckEmailRes, IPostCreateUserEmailRes } from '../../type/res';
 import { IJwtToken } from '../../type/interface';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -106,13 +107,13 @@ export class AuthService {
 
     switch (userAccountType) {
       case UserAccountTypeEnum.GOOGLE: {
-        const googleToken = await firstValueFrom(
+        const googleResponse = await firstValueFrom(
           this.httpService.get<IGetOauthGoogleTokenRes>(
             `${this.configService.get('GOOGLE_OAUTH_URL')}?access_token=${access_token}`,
           ),
         );
 
-        const { email, name, picture } = googleToken.data;
+        const { email, name, picture } = googleResponse.data;
 
         const imageResponse = await firstValueFrom(this.httpService.get(picture, { responseType: 'arraybuffer' }));
 
@@ -120,17 +121,7 @@ export class AuthService {
 
         const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
 
-        const formData = new FormData();
-
-        formData.append('image', file);
-
-        const resizingPicture = await firstValueFrom(
-          this.httpService.post(
-            `${this.configService.get('IMAGE_RESIZING_URL')}:${this.configService.get('IMAGE_RESIZING_PORT')}/${this.configService.get('IMAGE_RESIZING_PREFIX')}`,
-            formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } },
-          ),
-        );
+        const resizingPicture = await this._resizingImage({ imageFile: file });
 
         const userAccount = await this.userAccountRepository.findOne({
           where: { email, userAccountType: UserAccountTypeEnum.GOOGLE },
@@ -138,9 +129,11 @@ export class AuthService {
         });
 
         if (userAccount) {
+          // 유저 계정이 있는 경우
+
           await this.userRepository.update(
             { userSeq: userAccount.user.userSeq },
-            { nickname: name, name, thumbnail: resizingPicture.data.resizedImageUrl },
+            { nickname: name, name, thumbnail: resizingPicture },
           );
 
           const userAccountGoogle = await this.userAccountRepository.findOne({
@@ -149,6 +142,8 @@ export class AuthService {
           });
 
           if (userAccountGoogle) {
+            // 구글 유저 계정이 있는 경우 로그인으로 진행
+
             return await this._login({
               req,
               res,
@@ -157,6 +152,8 @@ export class AuthService {
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
             });
           } else {
+            // 유저 계정은 있으나 구글 계정이 없는 경우 구글 계정으로 연동
+
             const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
               userAccountType: UserAccountTypeEnum.GOOGLE,
               email,
@@ -172,12 +169,14 @@ export class AuthService {
             });
           }
         } else {
+          // 유저 계정이 없는 경우 회원가입으로 진행
+
           const newUser = await this.userRepository.createUser({
             nickname: name,
             name,
             policy: true,
             birthdate: undefined,
-            thumbnail: resizingPicture.data.resizedImageUrl,
+            thumbnail: resizingPicture,
           });
 
           const newUserAccount = await this.userAccountRepository.createUserAccountByOauth({
@@ -216,7 +215,7 @@ export class AuthService {
 
     await this.userPushTokenRepository.update({ user }, { pushToken: null });
 
-    await this._generateUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
+    await this._registerUserVisit({ req, type: UserVisitTypeEnum.SIGN_OUT_EMAIL, user });
 
     const cookies = req.cookies;
 
@@ -260,6 +259,16 @@ export class AuthService {
     return res.status(200).send({ data: { accessToken } });
   }
 
+  private async _registerUserVisit(params: { req: Request; type: UserVisitTypeEnum; user: User }) {
+    const { req, type, user } = params;
+    const { headers, ip = null } = req;
+    const { 'user-agent': userAgent = null, referer = null } = headers;
+
+    const userVisit = this.userVisitRepository.create({ user, type, ip, userAgent, referer });
+
+    return await this.userVisitRepository.save(userVisit);
+  }
+
   private async _generateJwtToken(params: IJwtToken) {
     const { userSeq, userAccountType, expiresIn } = params;
 
@@ -301,18 +310,26 @@ export class AuthService {
       await manager.update(UserAccount, { userAccountSeq: userAccount.userAccountSeq }, { refreshToken });
     });
 
-    await this._generateUserVisit({ req, type, user });
+    await this._registerUserVisit({ req, type, user });
 
     return res.status(200).send({ data: { email: userAccount.email, accessToken } });
   }
 
-  private async _generateUserVisit(params: { req: Request; type: UserVisitTypeEnum; user: User }) {
-    const { req, type, user } = params;
-    const { headers, ip = null } = req;
-    const { 'user-agent': userAgent = null, referer = null } = headers;
+  private async _resizingImage(params: { imageFile: File }) {
+    const { imageFile } = params;
 
-    const userVisit = this.userVisitRepository.create({ user, type, ip, userAgent, referer });
+    const formData = new FormData();
 
-    return await this.userVisitRepository.save(userVisit);
+    formData.append('image', imageFile);
+
+    const resizingPicture = await firstValueFrom<AxiosResponse<{ resizedImageUrl: string }>>(
+      this.httpService.post(
+        `${this.configService.get('IMAGE_RESIZING_URL')}:${this.configService.get('IMAGE_RESIZING_PORT')}/${this.configService.get('IMAGE_RESIZING_PREFIX')}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      ),
+    );
+
+    return resizingPicture.data.resizedImageUrl;
   }
 }
