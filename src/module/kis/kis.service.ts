@@ -1,17 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { KisTokenIssueRepository, KisTokenRepository, UserRepository } from '../../database/repository';
-import { IKisCreateToken } from '../../type/interface';
 import { Request } from 'express';
 import { ResConfig } from '../../config';
 import { KisToken } from '../../database/entities';
-import { AxiosResponse } from 'axios';
 
 @Injectable()
-export class KisService implements OnModuleInit {
+export class KisService {
   private kisToken: KisToken | null = null;
 
   constructor(
@@ -22,48 +19,6 @@ export class KisService implements OnModuleInit {
     private readonly kisTokenIssueRepository: KisTokenIssueRepository,
     private readonly userRepository: UserRepository,
   ) {}
-
-  async onModuleInit() {
-    // await this._deleteKisToken();
-    // await this.handleCron();
-  }
-
-  @Cron(CronExpression.EVERY_6_HOURS, { name: 'kis Token', timeZone: 'Asia/Seoul' })
-  async handleCron() {
-    const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-
-    console.log(`[${now}] Scheduler 'kis Token' called`);
-
-    const ret = await firstValueFrom<AxiosResponse<IKisCreateToken>>(
-      this.httpService.post(`${this.configService.get('KIS_APP_URL')}/oauth2/tokenP`, {
-        grant_type: 'client_credentials',
-        appkey: this.configService.get('KIS_APP_KEY'),
-        appsecret: this.configService.get('KIS_APP_SECRET'),
-      }),
-    );
-
-    const { access_token, access_token_token_expired, token_type, expires_in } = ret.data;
-
-    const isKisToken = await this.kisTokenRepository.findOne({ where: { kisTokenSeq: 1 } });
-
-    if (isKisToken) {
-      isKisToken.accessToken = access_token;
-      isKisToken.accessTokenExpired = access_token_token_expired;
-      isKisToken.tokenType = token_type;
-      isKisToken.expiresIn = expires_in;
-
-      await this.kisTokenRepository.save(isKisToken);
-    } else {
-      const token = this.kisTokenRepository.create({
-        accessToken: access_token,
-        accessTokenExpired: access_token_token_expired,
-        tokenType: token_type,
-        expiresIn: expires_in,
-      });
-
-      await this.kisTokenRepository.save(token);
-    }
-  }
 
   // 토큰
   async getOuathToken(params: { req: Request }) {
@@ -162,17 +117,5 @@ export class KisService implements OnModuleInit {
     }
 
     return this.kisToken;
-  }
-
-  private async _deleteKisToken() {
-    if (this.kisToken) {
-      return await firstValueFrom(
-        this.httpService.post(`${this.configService.get('KIS_APP_URL')}/oauth2/revokeP`, {
-          token: this.kisToken.accessToken,
-          appkey: this.configService.get('KIS_APP_KEY'),
-          appsecret: this.configService.get('KIS_APP_SECRET'),
-        }),
-      );
-    }
   }
 }

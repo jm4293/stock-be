@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthGuardConfig, configModuleConfig, typeormModuleConfig } from './config';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, BoardModule, KisModule, UserModule } from './module';
+import { AuthModule, BoardModule, KisModule, KisTokenScheduleModule, UserModule } from './module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { HomeModule } from './module/home';
@@ -22,6 +22,8 @@ import { HomeModule } from './module/home';
     BoardModule,
     AuthModule,
     UserModule,
+
+    KisTokenScheduleModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: AuthGuardConfig }],
