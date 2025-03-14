@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AuthGuardConfig, configModuleConfig, typeormModuleConfig } from './config';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, BoardModule, KisModule, KisTokenScheduleModule, UserModule } from './module';
+import { AuthModule, BoardModule, StockModule, KisTokenScheduleModule, UserModule, HomeModule } from './module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { HomeModule } from './module/home';
 
 /**
  * imports: 다른 모듈을 가져오기
@@ -18,7 +17,7 @@ import { HomeModule } from './module/home';
     ConfigModule.forRoot(configModuleConfig),
     TypeOrmModule.forRootAsync(typeormModuleConfig),
     HomeModule,
-    KisModule,
+    StockModule,
     BoardModule,
     AuthModule,
     UserModule,

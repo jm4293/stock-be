@@ -8,7 +8,7 @@ import { ResConfig } from '../../config';
 import { KisToken } from '../../database/entities';
 
 @Injectable()
-export class KisService {
+export class StockService {
   private kisToken: KisToken | null = null;
 
   constructor(
@@ -37,30 +37,6 @@ export class KisService {
   }
 
   async getCodeList() {
-    // const kisToken = await this._getKisToken();
-    //
-    // const ret = await firstValueFrom(
-    //   this.httpService.get(`${this.configService.get('KIS_APP_URL')}/uapi/domestic-stock/v1/quotations/inquire-ccnl`, {
-    //     headers: {
-    //       'Content-Type': 'application/json; charset=utf-8',
-    //       Authorization: `Bearer ${kisToken.accessToken}`,
-    //       appkey: this.configService.get('KIS_APP_KEY'),
-    //       appsecret: this.configService.get('KIS_APP_SECRET'),
-    //       tr_id: 'FHKST01010100',
-    //       custtype: 'P',
-    //     },
-    //     params: {
-    //       FID_COND_MRKT_DIV_CODE: 'J', // 시장 구분 코드
-    //     },
-    //   }),
-    // );
-    //
-    // if (ret.status !== 200) {
-    //   throw ResConfig.Fail_400({ message: '종목 리스트 조회에 실패하였습니다.' });
-    // }
-    //
-    // return ret.data;
-
     const ret: any = await firstValueFrom(
       this.httpService.get('http://api.seibro.or.kr/openapi/service/StockSvc/getKDRSecnInfo', {
         headers: {

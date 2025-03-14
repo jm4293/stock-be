@@ -1,12 +1,12 @@
 import { Controller, Get, Query, Req, Res } from '@nestjs/common';
-import { KisService } from './kis.service';
+import { StockService } from './stock.service';
 import { ResConfig } from '../../config';
 import { Request, Response } from 'express';
 import { Public } from '../../decorator';
 
-@Controller('kis')
-export class KisController {
-  constructor(private readonly kisService: KisService) {}
+@Controller('stock')
+export class StockController {
+  constructor(private readonly kisService: StockService) {}
 
   // 토큰
   @Get('oauth-token')

@@ -21,7 +21,7 @@ export class KisTokenScheduleService implements OnModuleInit {
     // await this._getKisTokenSchedule();
   }
 
-  @Cron(CronExpression.EVERY_6_HOURS, { name: 'kis Token', timeZone: 'Asia/Seoul' })
+  @Cron(CronExpression.EVERY_6_HOURS, { name: 'stock Token', timeZone: 'Asia/Seoul' })
   private async _getKisTokenSchedule() {
     const now = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
