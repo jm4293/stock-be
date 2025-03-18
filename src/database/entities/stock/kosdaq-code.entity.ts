@@ -1,20 +1,20 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
-export class StockCodeEntity {
+export class KOSDAQCode {
   @PrimaryGeneratedColumn()
   stockCodeSeq: number;
 
-  @Column({ type: 'varchar', length: 10 })
-  code: string;
+  @Column({ type: 'int' })
+  code: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: 'varchar', nullable: true })
   marketType: string;
 
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: 'varchar', nullable: true })
   stockType: string;
 
   @CreateDateColumn({ type: 'timestamp' })

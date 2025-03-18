@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager, Repository } from 'typeorm';
-import { StockCodeEntity } from '../../entities';
+import { KOSPICode } from '../../entities';
 
 @Injectable()
-export class StockCodeRepository extends Repository<StockCodeEntity> {
+export class KOSPICodeRepository extends Repository<KOSPICode> {
   constructor(manager: EntityManager) {
-    super(StockCodeEntity, manager);
+    super(KOSPICode, manager);
   }
 }
