@@ -5,17 +5,29 @@ export class KOSPICode {
   @PrimaryGeneratedColumn()
   stockCodeSeq: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   code: number;
 
-  @Column({ type: 'varchar' })
-  name: string;
+  @Column({ type: 'varchar', nullable: true })
+  companyName: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  industry: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  products: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  ceo: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  homePage: string;
 
   @Column({ type: 'varchar', nullable: true })
   marketType: string;
 
   @Column({ type: 'varchar', nullable: true })
-  stockType: string;
+  listingAt: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
