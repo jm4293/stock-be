@@ -3,13 +3,11 @@ import { UserService } from './user.service';
 import { Request, Response } from 'express';
 import { ResConfig } from '../../config';
 import { ReadUserNotificationDto, RegisterUserPushTokenDto } from '../../type/dto';
-import { Public } from '../../decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Public()
   @Get()
   async getMyInfo(@Req() req: Request, @Res() res: Response) {
     const ret = await this.userService.getMyInfo(req);
