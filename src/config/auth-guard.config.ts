@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { IJwtToken } from '../type/interface';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthGuardConfig implements CanActivate {
@@ -15,7 +16,8 @@ export class AuthGuardConfig implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.get<boolean>('isPublic', context.getHandler());
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
+
     const token = this._extractTokenFromHeader(request);
 
     if (token) {
@@ -35,8 +37,14 @@ export class AuthGuardConfig implements CanActivate {
     return true;
   }
 
+  // private _extractTokenFromHeader(request: Request): string | undefined {
+  //   const [type, token] = request.headers['authorization']?.split(' ') ?? [];
+  //   return type === 'Bearer' ? token : undefined;
+  // }
+
   private _extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers['authorization']?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    const token = request.cookies['AT'];
+
+    return token ? token : undefined;
   }
 }

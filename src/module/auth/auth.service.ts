@@ -10,7 +10,7 @@ import { User, UserAccount } from 'src/database/entities';
 import { userAccountTypeDescription, UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
+import { ACCESS_TOKEN_COOKIE_TIME, ACCESS_TOKEN_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ResConfig } from '../../config';
 import { HttpService } from '@nestjs/axios';
@@ -251,9 +251,19 @@ export class AuthService {
       throw ResConfig.Fail_403({ message: '리프레시 토큰이 일치하지 않습니다.' });
     }
 
+    // const accessToken = await this._generateJwtToken({ userSeq, userAccountType, expiresIn: ACCESS_TOKEN_TIME });
+
     const accessToken = await this._generateJwtToken({ userSeq, userAccountType, expiresIn: ACCESS_TOKEN_TIME });
 
-    return res.status(200).send({ data: { accessToken } });
+    console.log('accessToken', accessToken);
+
+    res.cookie('AT', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: ACCESS_TOKEN_COOKIE_TIME,
+    });
+
+    return res.status(200).send({});
   }
 
   private async _registerUserVisit(params: { req: Request; type: UserVisitTypeEnum; user: User }) {

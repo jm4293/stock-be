@@ -29,7 +29,7 @@ export class BoardService {
   // 게시판
   async getBoardList(params: { pageParam: number; req: Request }) {
     const { pageParam, req } = params;
-    const userSeq = req.user ? req.user.userSeq : null;
+    // const userSeq = req.user ? req.user.userSeq : null;
 
     const LIMIT = 5;
 
@@ -47,16 +47,16 @@ export class BoardService {
 
     const [boards, total] = await queryBuilder.getManyAndCount();
 
-    if (userSeq) {
-      for (const board of boards) {
-        const boardLike = await this.boardLikeRepository.findOne({
-          where: { boardSeq: board.boardSeq, userSeq },
-        });
-        board.isLiked = !!boardLike;
-      }
-    } else {
-      boards.forEach((board) => (board.isLiked = false));
-    }
+    // if (userSeq) {
+    //   for (const board of boards) {
+    //     const boardLike = await this.boardLikeRepository.findOne({
+    //       where: { boardSeq: board.boardSeq, userSeq },
+    //     });
+    //     board.isLiked = !!boardLike;
+    //   }
+    // } else {
+    //   boards.forEach((board) => (board.isLiked = false));
+    // }
 
     const hasNextPage = pageParam * LIMIT < total;
     const nextPage = hasNextPage ? pageParam + 1 : null;
