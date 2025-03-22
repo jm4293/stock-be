@@ -10,7 +10,7 @@ import { User, UserAccount } from 'src/database/entities';
 import { userAccountTypeDescription, UserAccountTypeEnum, UserVisitTypeEnum } from '../../constant/enum';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_COOKIE_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
+import { ACCESS_TOKEN_TIME, REFRESH_TOKEN_TIME } from '../../constant/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ResConfig } from '../../config';
 import { HttpService } from '@nestjs/axios';
@@ -86,8 +86,8 @@ export class AuthService {
     return { isExist: !!userAccount, email };
   }
 
-  async loginEmail(params: { dto: LoginEmailDto; req: Request; res: Response }) {
-    const { dto, req, res } = params;
+  async loginEmail(params: { dto: LoginEmailDto; req: Request }) {
+    const { dto, req } = params;
     const { email, password } = dto;
 
     const userAccount = await this.userAccountRepository.findUserAccountByEmail(email);
@@ -98,11 +98,11 @@ export class AuthService {
       throw ResConfig.Fail_400({ message: '비밀번호가 일치하지 않습니다.' });
     }
 
-    return await this._login({ req, res, user: userAccount.user, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
+    return await this._login({ req, user: userAccount.user, userAccount, type: UserVisitTypeEnum.SIGN_IN_EMAIL });
   }
 
-  async loginOauth(params: { dto: LoginOauthDto; req: Request; res: Response }) {
-    const { dto, req, res } = params;
+  async loginOauth(params: { dto: LoginOauthDto; req: Request }) {
+    const { dto, req } = params;
     const { userAccountType, access_token } = dto;
 
     switch (userAccountType) {
@@ -146,7 +146,6 @@ export class AuthService {
 
             return await this._login({
               req,
-              res,
               user: userAccountGoogle.user,
               userAccount: userAccountGoogle,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
@@ -162,7 +161,6 @@ export class AuthService {
 
             return await this._login({
               req,
-              res,
               user: newUserAccount.user,
               userAccount: newUserAccount,
               type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
@@ -187,7 +185,6 @@ export class AuthService {
 
           return await this._login({
             req,
-            res,
             user: newUser,
             userAccount: newUserAccount,
             type: UserVisitTypeEnum.SIGN_IN_OAUTH_GOOGLE,
@@ -278,14 +275,8 @@ export class AuthService {
     );
   }
 
-  private async _login(params: {
-    req: Request;
-    res: Response;
-    user: User;
-    userAccount: UserAccount;
-    type: UserVisitTypeEnum;
-  }) {
-    const { req, res, user, userAccount, type } = params;
+  private async _login(params: { req: Request; user: User; userAccount: UserAccount; type: UserVisitTypeEnum }) {
+    const { req, user, userAccount, type } = params;
 
     const accessToken = await this._generateJwtToken({
       userSeq: user.userSeq,
@@ -299,11 +290,11 @@ export class AuthService {
       expiresIn: REFRESH_TOKEN_TIME,
     });
 
-    res.cookie('RT', refreshToken, {
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: REFRESH_TOKEN_COOKIE_TIME,
-    });
+    // res.cookie('RT', refreshToken, {
+    //   httpOnly: true,
+    //   sameSite: 'strict',
+    //   maxAge: REFRESH_TOKEN_COOKIE_TIME,
+    // });
 
     await this.userAccountRepository.manager.transaction(async (manager) => {
       await manager.update(UserAccount, { user: { userSeq: user.userSeq } }, { refreshToken: null });
@@ -312,7 +303,9 @@ export class AuthService {
 
     await this._registerUserVisit({ req, type, user });
 
-    return res.status(200).send({ data: { email: userAccount.email, accessToken } });
+    // return res.status(200).send({ data: { email: userAccount.email, accessToken, refreshToken } });
+
+    return { email: userAccount.email, accessToken, refreshToken };
   }
 
   private async _resizingImage(params: { imageFile: File }) {

@@ -28,13 +28,17 @@ export class AuthController {
   @Public()
   @Post('login-email')
   async loginEmail(@Body() dto: LoginEmailDto, @Req() req: Request, @Res() res: Response) {
-    return await this.authService.loginEmail({ dto, req, res });
+    const ret = await this.authService.loginEmail({ dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
   @Public()
   @Post('login-oauth')
   async loginOauth(@Body() dto: LoginOauthDto, @Req() req: Request, @Res() res: Response) {
-    return await this.authService.loginOauth({ dto, req, res });
+    const ret = await this.authService.loginOauth({ dto, req });
+
+    return ResConfig.Success({ res, statusCode: 'OK', data: ret });
   }
 
   @Post('logout')
